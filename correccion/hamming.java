@@ -8,6 +8,14 @@ class hamming {
         int hammingCode[];  
           
         Scanner sc = new Scanner(System.in);  
+        
+        
+        String input = mensaje.getUserInput();
+        System.out.println("Mensaje codificado: " + input);
+
+
+
+
         System.out.println("Ingrese el mensaje binario ");
         String recibo = sc.nextLine(); //se recibe el input del usuario
         String[] numberStrings = recibo.split("");
@@ -17,41 +25,22 @@ class hamming {
         
         // se usa este for para pasarlo a un array
         for (int i = 0; i < numberStrings.length; i++) {
-            arr[i] = Integer.parseInt(numberStrings[i]);
+            if (!numberStrings[i].equals(" ")) {
+                arr[i] = Integer.parseInt(numberStrings[i]);
+            }
         }
         
         for (int num : arr) {
             System.out.print(num + " ");
         }
         System.out.println();  
-         
+        encoder.Devolucion(arr);
+
+        
         hammingCode = getHammingCode(arr);  
         hammingCodeSize = hammingCode.length;
       
-        System.out.println("Ingrese la cantidad de errores a agregar");
-        cantErr= sc.nextInt();
-        int i = 0;
-
-        // Loop as long as i is not equal to 2
-        while (i != cantErr) {
-            System.out.println("Igrese la posicion donde se agrega un bit de error " + "Escriba 0 para no incluir error:");  
-            errorPosition = sc.nextInt();  
-             
-            // ver si pidio un error el usuario   
-            if(errorPosition != 0) {  
-                // alterar el bit  
-                hammingCode[errorPosition - 1] = (hammingCode[errorPosition - 1] + 1) % 2;  
-            }  
-        System.out.println("La data enviada es:");  
-            for(int k = 0; k < hammingCodeSize; k++) {  
-                System.out.print(hammingCode[hammingCodeSize - k - 1]);  
-            }  
-            System.out.println();     
-            
-
-            // Increment i to eventually break out of the loop
-            i++;
-        }
+    
          receiveData(hammingCode, hammingCodeSize - arr.length); 
         // cerrar scanner 
             sc.close(); 
@@ -138,33 +127,7 @@ class hamming {
             }  
             errorLoc = parityArray[pow] + errorLoc;  
         }  
-        //Se revisan los parity bits y se revisa que no hayan errores, si hay entonces se arreglan
-        int pos = Integer.parseInt(errorLoc, 2);  
-        // si no es igual a cero, arreglar el error 
-        if(pos != 0) {  
-            System.out.println("Error en posicion " + pos);  
-            data[pos - 1] = (data[pos - 1] + 1) % 2;  
-            System.out.println("Codigo despues de arreglar el error:");  
-            for(int i = 0; i < size; i++) {  
-                System.out.print(data[size - i - 1]);  
-            }  
-            System.out.println();  
-        }  
-        else {  
-            System.out.println("No hay errores");  
-        }  
-        //Data original 
-        System.out.println("Data del emisor:");  
-        pow = parityBits - 1;  
-        for(int k = size; k > 0; k--) {  
-            if(Math.pow(2, pow) != k) {  
-                System.out.print(data[k - 1]);  
-            }  
-            else {  
-                 
-                pow--;  
-            }  
-        }  
-        System.out.println(); 
+        
     }  
+    
 }  
