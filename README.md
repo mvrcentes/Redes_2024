@@ -2,48 +2,94 @@
 
 [PDF](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/Entregables/Laboratorio_No2.pdf)
 
-## Corección de errores
-### Algortimo de Hamminh 
+## Cliente - Servidor
 
+![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/test.gif)
+
+## Cliente - Hamming 
+
+1. Compilar el cliente
 ```bash
-java hamming.java
+javac HammingFletcherClient.java
 ```
 
+2. Correr el cliente 
 ```bash
-0101011 
+java HammingFletcherClient
 ```
-![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/0101011.png)
 
+3. Correr el servidor 
 ```bash
-000110
+python3 hammingServer.py
 ```
-![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/000110.png)
 
+![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/hamming.gif)
+
+### Prueba 1
+
+* Mensaje: mundo
+* Cadena binaria: 10000101000110110111101110000110111001
+* Probabilidad de error: 0.01
+
+![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/hola-hamming.png)
+
+### Prueba 2
+
+* Mensaje: mundo
+* Cadena binaria: 1111011000100101001110110101011110101100111011
+* Probabilidad de error: 0.03
+
+![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/mundo-hamming.png)
+
+
+### Prueba 3
+
+* Mensaje: mundo
+* Cadena binaria: 1111011000100101001110110101011110101100111011
+* Probabilidad de error: 0.07
+
+![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/error-hamming.png)
+
+## Cliente - Fletcher
+
+1. Compilar el cliente
 ```bash
-1000111 
+javac HammingFletcherClient.java
 ```
-![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/1000111.png)
 
-## Detección de erroes 
-### Fletcher checksum 
+2. Correr el cliente 
+```bash
+java HammingFletcherClient
+```
 
-#### Pruebas
+3. Correr el servidor 
 ```bash
 python3 detectionFletcher.py
 ```
 
-```bash
-1010001 
-```
-![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/1010001.png)
+![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/fletcher.gif)
 
-```bash
-1101001 
-```
-![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/1101001.png)
+### Prueba 1
 
-```bash
-0011101
-```
-![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/0011101.png)
+* Mensaje: hola
+* Cadena binaria: 011010000110111101101100011000010001000000010011
+* Probabilidad de error: 0.01
 
+![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/hola-fletcher.png)
+
+
+### Prueba 2
+
+* Mensaje: mundo
+* Cadena binaria: 01101101011101010110111001100100011011110001100011101001
+* Probabilidad de error: 0.03
+
+![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/error-fletcher.png)
+
+### Prueba 3
+
+* Mensaje: mundo
+* Cadena binaria: 01101101011101010110111001100100011011110001100011101001
+* Probabilidad de error: 0.01
+
+![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/mundo-fletcher.png)
