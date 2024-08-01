@@ -51,7 +51,7 @@ public class HammingFletcherClient {
                 System.out.println("Ingrese un mensaje:");
                 String message = scanner.nextLine();
 
-                System.out.println("Ingrese la tasa de error (por ejemplo, 0.01 para un error cada 100 bits):");
+                System.out.println("Ingresar tasa de error (0.01):");
                 double errorRate = scanner.nextDouble();
                 scanner.nextLine(); // Consumir el salto de línea
 
