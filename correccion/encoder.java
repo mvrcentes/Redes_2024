@@ -10,7 +10,6 @@ public class encoder {
         return m;
     }
 
-        //en este se calcula la paridad y en el anterior los bits de paridad
     public static int calculateParity(int[] data, int parityBitPosition) {
         int xorResult = 0;
         for (int i = 0; i < data.length; i++) {
@@ -18,10 +17,9 @@ public class encoder {
                 xorResult ^= data[i];
             }
         }
-        
         return xorResult;
     }
-    
+
     public static int[] encodeData(int[] data) {
         int m = calculateParityBits(data.length);
         int[] encodedData = new int[data.length + m];
@@ -34,7 +32,7 @@ public class encoder {
         int dataIndex = 0;
         for (int i = 0; i < encodedData.length; i++) {
             if (isPowerOfTwo(i + 1)) {
-                continue; 
+                continue;
             }
             encodedData[i] = data[dataIndex];
             dataIndex++;
@@ -46,23 +44,21 @@ public class encoder {
             int parity = calculateParity(encodedData, i);
             encodedData[parityBitIndex] = parity;
         }
-        
+
         return encodedData;
     }
-    
-    // Check if a number is a power of two
+
     public static boolean isPowerOfTwo(int number) {
         return (number & (number - 1)) == 0;
     }
-    
-    public static String Devolucion(int [] info){
-        
+
+    public static String process(int[] info) {
         int[] encodedData = encodeData(info);
 
-        // Simulate transmission by introducing an error
-        encodedData[2] = 0;
+        // Simular transmisión introduciendo un error
+        encodedData[2] = 0; // Introducir un error arbitrario para la demostración
 
-        // Decode received data and correct errors
+        // Decodificar datos recibidos y corregir errores
         int[] decodedData = new int[info.length];
         int m = calculateParityBits(decodedData.length);
 
@@ -72,12 +68,11 @@ public class encoder {
             }
         }
 
-        // Output the results
+        // Mostrar los resultados
         System.out.println("Input Data: " + Arrays.toString(info));
         System.out.println("Encoded Data: " + Arrays.toString(encodedData));
         System.out.println("Decoded Data: " + Arrays.toString(decodedData));
-        
+
         return "________";
     }
-    
 }

@@ -5,7 +5,7 @@ public class mensaje {
         Scanner sc = new Scanner(System.in);
         System.out.print("Ingrese el mensaje que enviara: ");
         String userInput = sc.nextLine();
-
+        
         String binaryASCII = stringToBinaryASCII(userInput);
         return binaryASCII;
     }

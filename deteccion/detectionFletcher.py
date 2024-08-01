@@ -1,61 +1,54 @@
-import random
+import socket
 
-# Funciones para el cálculo de Fletcher
-def fletcher_checksum(data):
+def fletcher_checksum(message):
     sum1 = 0
     sum2 = 0
-    mod = 255
+    for char in message:
+        val = int(char)
+        sum1 = (sum1 + val) % 255
+        sum2 = (sum2 + sum1) % 255
+    return f"{sum1:08b}{sum2:08b}"
 
-    for byte in data:
-        sum1 = (sum1 + byte) % mod
-        sum2 = (sum2 + sum1) % mod
+def fletcher_checksum_verify(encoded_message):
+    length = len(encoded_message)
+    if length < 16:
+        return False, ""  # Mensaje demasiado corto para contener un checksum válido
+    message = encoded_message[:-16]
+    received_checksum = encoded_message[-16:]
+    calculated_checksum = fletcher_checksum(message)
+    return received_checksum == calculated_checksum, message
 
-    checksum = (sum2 << 8) | sum1
-    return checksum
+def binary_to_text(binary_message):
+    binary_int = int(binary_message, 2)
+    byte_number = (binary_int.bit_length() + 7) // 8
+    binary_array = binary_int.to_bytes(byte_number, "big")
+    ascii_text = binary_array.decode(errors='ignore')
+    return ascii_text
 
-def verify_checksum(data, checksum):
-    calculated_checksum = fletcher_checksum(data)
-    return calculated_checksum == checksum
-
-# Capa de Enlace y Ruido
-def generar_trama(mensaje):
-    codigo_binario = ''.join(format(ord(char), '08b') for char in mensaje)
-    data = [int(codigo_binario[i:i+8], 2) for i in range(0, len(codigo_binario), 8)]
-    checksum = fletcher_checksum(data)
-    trama_con_integridad = codigo_binario + format(checksum, '016b')  # Agregar checksum
-
-    # Aplicar ruido (probabilidad de 0.01)
-    trama_con_ruido = ''.join(bit if random.random() > 0.01 else str(1 - int(bit)) for bit in trama_con_integridad)
-
-    return trama_con_ruido
-
-# Capa de Enlace
-def recibir_trama(trama_recibida):
-    trama_recibida_sin_ruido = trama_recibida.replace(" ", "")  # Eliminar ruido
-    received_checksum = trama_recibida_sin_ruido[-16:]  # Extraer checksum recibido
-    received_data = trama_recibida_sin_ruido[:-16]
-    received_data = [int(received_data[i:i+8], 2) for i in range(0, len(received_data), 8)]
-    is_checksum_valid = verify_checksum(received_data, int(received_checksum, 2))
-
-    if is_checksum_valid:
-        mensaje_decodificado = ''.join(chr(byte) for byte in received_data)
-        return mensaje_decodificado
-    else:
-        return "Error: Se detectaron errores en la trama."
-
-# Función principal
 def main():
-    mensaje = input("Ingrese el mensaje a enviar: ")
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind(('localhost', 12347))
+    server_socket.listen(1)
+    print("Servidor de Fletcher escuchando en el puerto 12347...")
 
-    # Generar trama con integridad y ruido
-    trama_enviada = generar_trama(mensaje)
+    while True:
+        client_socket, addr = server_socket.accept()
+        print(f"Conexión aceptada de {addr}")
 
-    # Emisor envía la trama al receptor
-    print("Trama enviada:", trama_enviada)
+        data = client_socket.recv(1024).decode().strip()
+        if not data:
+            break
 
-    # Receptor recibe y procesa la trama
-    mensaje_recibido = recibir_trama(trama_enviada)
-    print("Mensaje recibido:", mensaje_recibido)
+        valid, message = fletcher_checksum_verify(data)
+        if valid:
+            print("El mensaje es válido.")
+            decoded_text_message = binary_to_text(message)
+        else:
+            decoded_text_message = "Se detectó un error en el mensaje."
+
+        print(f"Mensaje decodificado: {decoded_text_message}")
+        client_socket.send(decoded_text_message.encode())
+        client_socket.close()
 
 if __name__ == "__main__":
     main()
