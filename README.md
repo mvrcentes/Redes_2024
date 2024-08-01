@@ -1,10 +1,10 @@
 # Redes_2024
 
-[PDF](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/Entregables/Laboratorio_No2.pdf)
+[PDF](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_2/Entregables/Laboratorio_No2.pdf)
 
 ## Cliente - Servidor
 
-![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/test.gif)
+![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_2/images/test.gif)
 
 ## Cliente - Hamming 
 
@@ -23,7 +23,7 @@ java HammingFletcherClient
 python3 hammingServer.py
 ```
 
-![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/hamming.gif)
+![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_2/images/hamming.gif)
 
 ### Prueba 1
 
@@ -31,7 +31,7 @@ python3 hammingServer.py
 * Cadena binaria: 10000101000110110111101110000110111001
 * Probabilidad de error: 0.01
 
-![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/hola-hamming.png)
+![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_2/images/hola-hamming.png)
 
 ### Prueba 2
 
@@ -39,7 +39,7 @@ python3 hammingServer.py
 * Cadena binaria: 1111011000100101001110110101011110101100111011
 * Probabilidad de error: 0.03
 
-![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/mundo-hamming.png)
+![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_2/images/mundo-hamming.png)
 
 
 ### Prueba 3
@@ -48,7 +48,7 @@ python3 hammingServer.py
 * Cadena binaria: 1111011000100101001110110101011110101100111011
 * Probabilidad de error: 0.07
 
-![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/error-hamming.png)
+![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_2/images/error-hamming.png)
 
 ## Cliente - Fletcher
 
@@ -67,7 +67,7 @@ java HammingFletcherClient
 python3 detectionFletcher.py
 ```
 
-![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/fletcher.gif)
+![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_2/images/fletcher.gif)
 
 ### Prueba 1
 
@@ -75,7 +75,7 @@ python3 detectionFletcher.py
 * Cadena binaria: 011010000110111101101100011000010001000000010011
 * Probabilidad de error: 0.01
 
-![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/hola-fletcher.png)
+![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_2/images/hola-fletcher.png)
 
 
 ### Prueba 2
@@ -84,7 +84,7 @@ python3 detectionFletcher.py
 * Cadena binaria: 01101101011101010110111001100100011011110001100011101001
 * Probabilidad de error: 0.03
 
-![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/error-fletcher.png)
+![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_2/images/error-fletcher.png)
 
 ### Prueba 3
 
@@ -92,4 +92,4 @@ python3 detectionFletcher.py
 * Cadena binaria: 01101101011101010110111001100100011011110001100011101001
 * Probabilidad de error: 0.01
 
-![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_1/images/mundo-fletcher.png)
+![](https://github.com/mvrcentes/Redes_2024/blob/Lab-2_2/images/mundo-fletcher.png)
