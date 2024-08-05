@@ -18,9 +18,13 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@components/*": ["./src/app/components/*"],
+      "@assets/*": ["./src/app/assets/*"],
+      "@icons/*": ["./src/app/assets/icons/*"],
+      "@public": ["./public/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/dashboard/hola/page.tsx"],
   "exclude": ["node_modules"]
 }

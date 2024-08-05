@@ -1,20 +1,31 @@
-import * as XMPP from "stanza"
+"use server"
 
-import { Register } from "@/lib/types"
+import { cookies } from "next/headers"
+import { client, xml } from "@xmpp/client"
+import jwt from "jsonwebtoken"
+import { serialize } from "cookie"
 
-export const client = XMPP.createClient({
-  jid: "echobot@example.com",
-  password: "hunter2",
+export const handleCookies = (
+  jid: string,
+  password: string,
+  websocket: string
+) => {
+  cookies().set("jid", jid)
+  cookies().set("password", password)
+  cookies().set("websocket", websocket)
 
-  // If you have a .well-known/host-meta.json file for your
-  // domain, the connection transport config can be skipped.
-  transports: {
-    websocket: "wss://example.com:5281/xmpp-websocket",
-    bosh: "https://example.com:5281/http-bind",
-  },
-})
+  const token = jwt.sign(
+    { jid: jid, password: password, websocket: websocket },
+    "secret"
+  )
 
-client.on("session:started", () => {
-  client.getRoster()
-  client.sendPresence()
-})
+  const serializedToken = serialize("Mytoken", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 10000 * 60 * 60 * 24 * 30,
+    path: "/",
+  })
+
+  cookies().set("Mytoken", token)
+}
