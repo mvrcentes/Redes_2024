@@ -1,11 +1,10 @@
 "use client"
 import { useEffect, useState } from "react"
-import * as XMPP from "stanza"
 import { client, xml } from "@xmpp/client"
 
 const TestPage = () => {
   const [status, setStatus] = useState<string>("Disconnected")
-  const [client, setClient] = useState<any>(null)
+  const [data, setClient] = useState<any>(null)
 
   const handleConnect = () => {
     const xmpp = client({

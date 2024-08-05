@@ -14,3 +14,21 @@ export const profileHandler = async () => {
     console.log("error")
   }
 }
+
+export const getCredentials = async () => {
+  try {
+    const cookiesData = await cookies()
+
+    const jid = cookiesData.get("jid")?.value
+    const password = cookiesData.get("password")?.value
+    const websocket = cookiesData.get("websocket")?.value
+
+    return {
+      jid,
+      password,
+      websocket,
+    }
+  } catch (error) {
+    console.log("error")
+  }
+}

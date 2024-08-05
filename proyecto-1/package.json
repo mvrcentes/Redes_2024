@@ -21,6 +21,7 @@
     "@xmpp/debug": "^0.13.0",
     "axios": "^1.7.3",
     "class-variance-authority": "^0.7.0",
+    "classnames": "^2.5.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "cookie": "^0.6.0",
