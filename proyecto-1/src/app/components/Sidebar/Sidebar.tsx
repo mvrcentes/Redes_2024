@@ -13,21 +13,9 @@ const Sidebar = () => {
         <UserRoundSearch color="#898787" />
       </SideBarItem>
 
-      <Link
-        href="/dashboard"
-        className="flex flex-col gap-1 justify-center items-center mt-40">
-        <UserRoundSearch color="#898787" />
-        <p className="text-sm">Contacts</p>
-      </Link>
-
-      <Link
-        href="/dashboard"
-        className="flex flex-col gap-1 justify-center items-center
-        
-        ">
+      <SideBarItem title="All chats" path="/dashboard/chats">
         <MessageSquare color="#898787" height={24} width={24} />
-        <p className="">All chats</p>
-      </Link>
+      </SideBarItem>
     </div>
   )
 }
