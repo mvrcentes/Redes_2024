@@ -1,5 +1,6 @@
 "use client"
 
+import React, { useState, useContext } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -9,15 +10,15 @@ import { registerFormSchema } from "@/lib/validations"
 import CustomFormField from "../../reusable/CustomFormField"
 import { SubmitButton } from "../../reusable/SubmitButton"
 import { FormFieldType } from "@/lib/types"
-import { useState } from "react"
-import axios from "axios"
 import { handleCookies } from "@/api/auth"
-import { client, xml } from "@xmpp/client"
+import { Client, client, xml } from "@xmpp/client"
 import { useRouter } from "next/navigation"
 
+import { XMPPContext } from "@/context/xmppContext"
+
 export function Signin() {
-  
   const [isLoading, setIsLoading] = useState(false)
+  const { xmppClient, setXmppClient } = useContext(XMPPContext)
   const router = useRouter()
   const { toast } = useToast()
 
@@ -33,12 +34,8 @@ export function Signin() {
   async function onSubmit(data: z.infer<typeof registerFormSchema>) {
     setIsLoading(true)
     try {
-      // const token = await signIn(data.jid, data.password, data.websocket)
-
       const xmpp = await client({
         service: data.websocket,
-        // domain: "tigase.im",
-        // resource: "example",
         username: data.jid,
         password: data.password,
       })
@@ -54,8 +51,9 @@ export function Signin() {
         console.log("offline")
       })
 
-      xmpp.on("online", () => {
+      await xmpp.on("online", async () => {
         console.log("online front")
+        await setXmppClient(xmpp)
         handleCookies(data.jid, data.password, data.websocket)
 
         toast({
@@ -66,16 +64,7 @@ export function Signin() {
         router.push("/dashboard")
       })
       xmpp.start()
-
-      toast({
-        title: "Connected",
-        description: "Successfully connected to XMPP server.",
-      })
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to connect to XMPP server.",
-      })
     } finally {
       setIsLoading(false)
     }
