@@ -1,7 +1,6 @@
 "use server"
 
 import { cookies } from "next/headers"
-import { client, xml } from "@xmpp/client"
 import jwt from "jsonwebtoken"
 import { serialize } from "cookie"
 
@@ -28,4 +27,10 @@ export const handleCookies = (
   })
 
   cookies().set("Mytoken", token)
+}
+
+
+export const getCookie = (cookie: string) => {
+  console.log(cookies().get(cookie)?.value, "cookie getCookie")
+  return cookies().get(cookie)?.value
 }
