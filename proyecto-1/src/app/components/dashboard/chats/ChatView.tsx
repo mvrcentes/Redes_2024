@@ -12,9 +12,12 @@ interface ChatViewProps {
   title: string
   chats?: any
   client?: Client
+  from: string
 }
 
 const ChatMessage = ({ message, from, right }: { message: string; from?: string, right?:boolean }) => {
+
+  console.log(right, "right")
 
   return (
     <div className={classNames({
@@ -29,7 +32,7 @@ const ChatMessage = ({ message, from, right }: { message: string; from?: string,
   )
 }
 
-const ChatView = ({ title, chats, client }: ChatViewProps) => {
+const ChatView = ({ title, chats, client, from }: ChatViewProps) => {
   const [messageData, setMessageData] = React.useState("")
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -72,12 +75,15 @@ const ChatView = ({ title, chats, client }: ChatViewProps) => {
         <p className="text-3xl">{title.split("/")[0]}</p>
       </div>
 
-      <div className="flex flex-col gap-2 mt-auto mb-4">
+      <div className="flex flex-col gap-2 mt-auto mb-4 overflow-auto">
         {chats.map((chat: Chat) => {
-
+          
+          console.log(from.split('@')[0], "frommmm")
+          console.log(client!.jid?.getLocal(), "aqui")
+          console.log(client!.jid?.getLocal() === from.split('/')[0])
           return chat.messages.map((message: string, index: number) => {
 
-            return <ChatMessage key={index} message={message} from={chat.jid}/>
+            return <ChatMessage key={index} message={message} from={chat.jid} right={client!.jid?.getLocal() === from.split('@')[0]}/>
           })
         })}
       </div>

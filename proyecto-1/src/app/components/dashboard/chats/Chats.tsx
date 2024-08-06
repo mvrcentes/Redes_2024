@@ -113,6 +113,7 @@ const Chats = () => {
               title={activeJid}
               chats={[{ jid: activeJid, messages: conversations[activeJid] }]}
               client={xmppClient!}
+              from={activeJid}
             />
           )
         }
