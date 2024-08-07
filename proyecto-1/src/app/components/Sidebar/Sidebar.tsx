@@ -1,10 +1,11 @@
 "use client"
 
 import React from "react"
-import { MessageSquare, UserRoundSearch } from "lucide-react"
-import Link from "next/link"
+import { LogOut, MessageSquare, UserRoundSearch } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 import SideBarItem from "./SideBarItem"
+import { signOut } from "@/api/profile"
 
 const Sidebar = () => {
   return (
@@ -15,6 +16,20 @@ const Sidebar = () => {
 
       <SideBarItem title="All chats" path="/dashboard/chats">
         <MessageSquare color="#898787" height={24} width={24} />
+      </SideBarItem>
+
+      {/* <Button className="bg-transparent hover:bg-[#464646] h-auto mt-auto"
+      onClick={() => signOut()}
+      >
+        <div className="flex flex-col gap-1 justify-center items-center p-4 bg-transparent">
+          <LogOut height={24} width={24} color="#898787" />
+          <p className="text-[10px] text-[#898787]">Logout</p>
+        </div>
+      </Button> */}
+
+      <SideBarItem title="Logout" path="/auth/signin">
+        <LogOut color="#898787" className="mt-auto" onClick={() => signOut()}
+        />
       </SideBarItem>
     </div>
   )

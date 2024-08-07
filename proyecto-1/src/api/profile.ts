@@ -32,3 +32,15 @@ export const getCredentials = async () => {
     console.log("error")
   }
 }
+
+
+export const signOut = async () => {
+  try {
+    cookies().delete("jid")
+    cookies().delete("password")
+    cookies().delete("websocket")
+  } catch (error) {
+    console.log("error")
+  }
+}
+
