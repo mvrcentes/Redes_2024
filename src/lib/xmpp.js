@@ -1,5 +1,6 @@
 import { client, xml } from "@xmpp/client"
 import { setCookie, destroyCookie } from "nookies"
+import { type } from "os"
 
 class XMPPCLient {
   constructor(service, username, password) {
@@ -8,6 +9,8 @@ class XMPPCLient {
     this.password = password
     this.xmppClient = null
     this.contacts = []
+    this.notifications = []
+    this.notificationListeners = []
   }
 
   async initialize() {
@@ -102,26 +105,79 @@ class XMPPCLient {
 
   async receiveContactRequest() {
     if (this.xmppClient) {
-      try {
-        this.xmppClient.on("stanza", (stanza) => {
-          // Verifica si la stanza es de tipo 'presence'
-          if (stanza.is("presence")) {
-            // Verifica si el tipo de presencia es 'subscribe', lo que indica una invitación de contacto
-            if (stanza.attrs.type === "subscribe") {
-              const from = stanza.attrs.from // El JID del usuario que está enviando la invitación
-              console.log(`Received contact subscription request from: ${from}`)
+      this.xmppClient.on("stanza", (stanza) => {
+        if (stanza.is("presence") && stanza.attrs.type === "subscribe") {
+          const from = stanza.attrs.from
+          this.notifications.push({ from, type: "subscribe" })
+          this.notificationListeners.forEach((callback) =>
+            callback(this.notifications)
+          )
+        }
+      })
+    }
+  }
 
-              // Aquí puedes manejar la solicitud, como mostrar una notificación al usuario
-              // o agregar una función para aceptar/rechazar la solicitud
-            }
-          }
-        })
+  onNotificationsChange(callback) {
+    this.notificationListeners.push(callback)
+  }
+
+  async acceptContactRequest(jid) {
+    if (this.xmppClient) {
+      const subscribedPresence = xml("presence", {
+        to: jid,
+        type: "subscribed",
+      })
+
+      const subscribePresence = xml("presence", {
+        to: jid,
+        type: "subscribe",
+      })
+
+      try {
+        if (this.xmppClient.status === "online") {
+          console.log("Accepting contact request")
+          await this.xmppClient.send(subscribedPresence)
+          console.log("Contact request accepted")
+
+          await this.xmppClient.send(subscribePresence)
+          console.log("Contact subscription confirmed")
+
+          // Eliminar la notificación correspondiente
+          this.notifications = this.notifications.filter(
+            (notification) => notification.from !== jid
+          )
+          console.log("Updated Notifications:", this.notifications)
+        }
       } catch (error) {
-        console.error("Failed to receive contact request:", error)
+        console.error("Failed to accept contact request:", error)
       }
     }
   }
 
+  async rejectContactRequest(jid) {
+    if (this.xmppClient) {
+      const unsubscribedPresence = xml("presence", {
+        to: jid,
+        type: "unsubscribed",
+      })
+
+      try {
+        if (this.xmppClient.status === "online") {
+          console.log("Rejecting contact request")
+          await this.xmppClient.send(unsubscribedPresence)
+          console.log("Contact request rejected")
+
+          // Eliminar la notificación correspondiente
+          this.notifications = this.notifications.filter(
+            (notification) => notification.from !== jid
+          )
+          console.log("Updated Notifications:", this.notifications)
+        }
+      } catch (error) {
+        console.error("Failed to reject contact request:", error)
+      }
+    }
+  }
   // Setters
 
   // Getters
