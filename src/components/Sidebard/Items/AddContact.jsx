@@ -16,24 +16,31 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { UserRoundSearch } from "lucide-react"
 import { XMPPContext } from "@/context/xmppContext"
+import { set } from "date-fns"
 
 const AddContact = () => {
   const { xmppClientProvider } = useContext(XMPPContext)
   const [domain, setDomain] = useState("")
+  const [username, setUsername] = useState("")
 
   const sendRequest = async () => {
     console.log("Sending request from addContact")
 
     if (xmppClientProvider.xmppClient.status === "online") {
-      xmppClientProvider.sendContactRequest("ram21032@tigase.im")
+      xmppClientProvider.sendContactRequest(username)
     }
+  }
+
+  const handleUsernameChange = (e) => {
+    setUsername(e.target.value)
   }
 
   useEffect(() => {
     if (xmppClientProvider) {
       setDomain(xmppClientProvider.xmppClient.jid.getDomain())
+      setUsername(`@${domain}`)
     }
-  }, [xmppClientProvider])
+  }, [xmppClientProvider, domain])
 
   return (
     <div className="">
@@ -56,15 +63,14 @@ const AddContact = () => {
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="name" className="text-right">
-                Name
-              </Label>
-              <Input id="name" value={`@${domain}`} className="col-span-3" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="username" className="text-right">
                 Username
               </Label>
-              <Input id="username" value="@peduarte" className="col-span-3" />
+              <Input
+                id="username"
+                value={username}
+                onChange={handleUsernameChange}
+                className="col-span-3"
+              />
             </div>
           </div>
           <SheetFooter>
