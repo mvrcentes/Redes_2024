@@ -12,28 +12,6 @@ const Chats = () => {
   const [conversations, setConversations] = useState({})
   const [activeJid, setActiveJid] = useState(null)
 
-  const sendMessage = async () => {
-    xmppClientProvider.xmppClient.send(xml("presence"))
-    if (xmppClientProvider.xmppClient.status === "online") {
-      const message = xml(
-        "message",
-        {
-          type: "chat",
-          to: "ram21032@alumchat.lol",
-          // to: "cas21700@alumchat.lol",
-        },
-        xml("body", {}, "hello World")
-      )
-
-      try {
-        await xmppClientProvider.xmppClient.send(message)
-        console.log("Message sent")
-      } catch (error) {
-        console.error("Failed to send message:", error)
-      }
-    }
-  }
-
   const fetchConversations = async () => {
     if (xmppClientProvider.xmppClient.status === "online") {
       xmppClientProvider.xmppClient.on("stanza", (stanza) => {
@@ -59,6 +37,7 @@ const Chats = () => {
     if (xmppClientProvider) {
       console.log("xmppClientProvider:", xmppClientProvider)
       fetchConversations()
+      xmppClientProvider.getConversations()
     } else {
       console.log("XMPP Client not initialized")
     }
@@ -71,27 +50,26 @@ const Chats = () => {
         <div className="h-full flex flex-row">
           <div className="flex flex-col">
             <h2 className="text-xl font-bold mb-4">Active Chats</h2>
-            {Object.keys(conversations).map((jid) => {
-              const messages = conversations[jid]
-              return (
-                <Conversation
-                  key={jid}
-                  name={jid}
-                  lastMessage={messages[messages.length - 1]}
-                  active={jid === activeJid}
-                  onClick={() => setActiveJid(jid)} // Cambia el estado de la conversación activa
-                />
-              )
-            })}
+            {xmppClientProvider &&
+              xmppClientProvider.users.map((user, index) => {
+                return (
+                  <Conversation
+                    key={index}
+                    user={user}
+                    active={user.jid === activeJid}
+                    onClick={() => setActiveJid(user.jid)} // Cambia el estado de la conversación activa
+                  />
+                )
+              })}
           </div>
 
           {
             // Si activeJid es diferente de null, se muestra el componente ChatView
-            activeJid && (
+            activeJid && xmppClientProvider && (
               <ChatView
                 title={activeJid}
                 chats={[{ jid: activeJid, messages: conversations[activeJid] }]}
-                client={xmppClientProvider.xmppClient}
+                client={xmppClientProvider}
                 from={activeJid}
               />
             )

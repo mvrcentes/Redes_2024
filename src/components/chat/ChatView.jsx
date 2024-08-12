@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import classNames from "classnames"
 import { xml } from "@xmpp/client"
@@ -20,37 +20,30 @@ const ChatMessage = ({ message, from, right }) => {
   )
 }
 
-const ChatView = ({ title, chats, client, from }) => {
+const ChatView = ({ title, client, from }) => {
   const [messageData, setMessageData] = React.useState("")
+  const [messages, setMessages] = useState([])
+
+  // const handleKeyDown = (event) => {
+  //   if (event.key === "Enter") {
+  //     client.sendMessage(title.split("/")[0], messageData)
+  //     setMessageData("")
+  //   }
+  // }
+
+  const user = client.users.find((user) => user.jid === title)
+
+  useEffect(() => {
+    const user = client.users.find((user) => user.jid === title)
+    if (user) {
+      setMessages(user.messages)
+    }
+  }, [title, client.users])
 
   const handleKeyDown = (event) => {
     if (event.key === "Enter") {
-      sendMessage()
+      client.sendMessage(title.split("/")[0], messageData)
       setMessageData("")
-    }
-  }
-
-  const sendMessage = async () => {
-    if (!client) {
-      console.error("XMPP client not initialized")
-      return
-    }
-
-    if (client.status === "online") {
-      const message = xml(
-        "message",
-        { type: "chat", to: title.split("/")[0] },
-        xml("body", {}, messageData)
-      )
-
-      try {
-        await client.send(message)
-        console.log("Message sent")
-      } catch (error) {
-        console.error("Failed to send message:", error)
-      }
-    } else {
-      console.error("Client is not online")
     }
   }
 
@@ -61,19 +54,23 @@ const ChatView = ({ title, chats, client, from }) => {
       </div>
 
       <div className="flex flex-col gap-2 mt-auto mb-4 overflow-auto">
-        {chats.map((chat, index) => {
-          const messages = chat.messages
-          const localJid = client.jid.getLocal()
-
-          return messages.map((message, messageIndex) => (
-            <ChatMessage
-              key={messageIndex}
-              message={message}
-              from={chat.jid}
-              right={localJid === chat.jid.split("@")[0]}
-            />
-          ))
-        })}
+        {
+          // Si user es diferente de undefined, se muestra el historial de mensajes
+          user &&
+            user.messages.map((message, index) => {
+              return (
+                <ChatMessage
+                  key={index}
+                  message={message.message}
+                  from={message.from}
+                  right={
+                    message.from.split("@")[0] ===
+                    client.xmppClient.jid.getLocal()
+                  }
+                />
+              )
+            })
+        }
       </div>
 
       <div>

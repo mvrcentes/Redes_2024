@@ -1,6 +1,6 @@
 import { client, xml } from "@xmpp/client"
 import { setCookie, destroyCookie } from "nookies"
-import { type } from "os"
+import User from "./User"
 
 class XMPPCLient {
   constructor(service, username, password) {
@@ -11,6 +11,7 @@ class XMPPCLient {
     this.contacts = []
     this.notifications = []
     this.notificationListeners = []
+    this.users = []
   }
 
   async initialize() {
@@ -78,10 +79,68 @@ class XMPPCLient {
       try {
         this.xmppClient.on("stanza", (stanza) => {
           console.log("Incoming stanza:", stanza.toString())
+          if (stanza.is("message")) {
+            console.log("Message:", stanza.getChildText("body"))
+            const from = stanza.attrs.from.slice(0, stanza.attrs.from.indexOf("/"))
+            const message = stanza.getChildText("body")
+
+            console.log("from", from)
+
+            if (!this.users.find((user) => user.jid === from)) {
+              // Si no está, agrega un nuevo usuario
+              this.users.push(new User(from))
+            }
+
+            const user = this.users.find((user) => user.jid === from)
+            if (user) {
+              if (message !== null)
+                user.messages.push({
+                  message: message,
+                  from: from,
+                })
+              console.log(user.messages)
+            }
+          }
+
+          console.log(this.users)
         })
       } catch (error) {
         console.error("Failed to get roster:", error)
       }
+    }
+  }
+
+  async sendMessage(jid, messageData) {
+    if (!this.xmppClient) {
+      console.error("XMPP client not initialized")
+      return
+    }
+
+    if (this.xmppClient.status === "online") {
+      const message = xml(
+        "message",
+        { type: "chat", to: jid },
+        xml("body", {}, messageData)
+      )
+
+      try {
+        await this.xmppClient.send(message)
+        console.log("Message sent")
+        
+        console.log(jid)
+        const to = this.users.find((user) => user.jid === jid)
+        console.log(to)
+        if (to) {
+          to.messages.push({
+            message: messageData,
+            from: this.xmppClient.jid.toString(),
+          })
+        }
+      } catch (error) {
+        console.log("Failed to send message:", error)
+      }
+    } else {
+      console.log("Client is not online")
     }
   }
 
