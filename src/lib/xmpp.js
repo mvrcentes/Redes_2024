@@ -81,7 +81,10 @@ class XMPPCLient {
           console.log("Incoming stanza:", stanza.toString())
           if (stanza.is("message")) {
             console.log("Message:", stanza.getChildText("body"))
-            const from = stanza.attrs.from.slice(0, stanza.attrs.from.indexOf("/"))
+            const from = stanza.attrs.from.slice(
+              0,
+              stanza.attrs.from.indexOf("/")
+            )
             const message = stanza.getChildText("body")
 
             console.log("from", from)
@@ -126,21 +129,28 @@ class XMPPCLient {
       try {
         await this.xmppClient.send(message)
         console.log("Message sent")
-        
-        console.log(jid)
+
         const to = this.users.find((user) => user.jid === jid)
-        console.log(to)
         if (to) {
           to.messages.push({
             message: messageData,
             from: this.xmppClient.jid.toString(),
           })
+          this.notifyUserUpdate(jid) // Notifica que se ha actualizado el usuario
         }
       } catch (error) {
         console.log("Failed to send message:", error)
       }
     } else {
       console.log("Client is not online")
+    }
+  }
+
+  // Método para notificar que un usuario ha sido actualizado
+  notifyUserUpdate(jid) {
+    const user = this.users.find((user) => user.jid === jid)
+    if (user && user.onUpdate) {
+      user.onUpdate(user.messages)
     }
   }
 

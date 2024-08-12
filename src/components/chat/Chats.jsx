@@ -14,8 +14,7 @@ const Chats = () => {
 
   const fetchConversations = async () => {
     if (xmppClientProvider.xmppClient.status === "online") {
-      xmppClientProvider.xmppClient.on("stanza", (stanza) => {
-        console.log("Stanza:", stanza.toString())
+      const handleStanza = (stanza) => {
         if (stanza.is("message")) {
           const from = stanza.attrs.from
           const message = stanza.getChildText("body")
@@ -28,18 +27,56 @@ const Chats = () => {
             return newConversations
           })
         }
-      })
+      }
+  
+      xmppClientProvider.xmppClient.on("stanza", handleStanza)
+  
+      return () => {
+        xmppClientProvider.xmppClient.off("stanza", handleStanza)
+      }
     }
-    console.log(conversations)
+  }
+  
+
+  const handleMessagesUpdate = (updatedMessages) => {
+    setConversations((prev) => ({
+      ...prev,
+      [activeJid]: updatedMessages,
+    }))
   }
 
+  // useEffect(() => {
+  //   if (xmppClientProvider) {
+  //     console.log("xmppClientProvider:", xmppClientProvider)
+  //     fetchConversations()
+  //     xmppClientProvider.getConversations()
+  //   } else {
+  //     console.log("XMPP Client not initialized")
+  //   }
+  // }, [xmppClientProvider])
+
   useEffect(() => {
-    if (xmppClientProvider) {
-      console.log("xmppClientProvider:", xmppClientProvider)
-      fetchConversations()
-      xmppClientProvider.getConversations()
-    } else {
-      console.log("XMPP Client not initialized")
+    if (xmppClientProvider.xmppClient.status === "online") {
+      const handleStanza = (stanza) => {
+        if (stanza.is("message")) {
+          const from = stanza.attrs.from
+          const message = stanza.getChildText("body")
+          setConversations((prev) => {
+            const newConversations = { ...prev }
+            if (!newConversations[from]) {
+              newConversations[from] = []
+            }
+            newConversations[from].push(message)
+            return newConversations
+          })
+        }
+      }
+  
+      xmppClientProvider.xmppClient.on("stanza", handleStanza)
+  
+      return () => {
+        xmppClientProvider.xmppClient.off("stanza", handleStanza)
+      }
     }
   }, [xmppClientProvider])
 
@@ -71,6 +108,7 @@ const Chats = () => {
                 chats={[{ jid: activeJid, messages: conversations[activeJid] }]}
                 client={xmppClientProvider}
                 from={activeJid}
+                onMessagesUpdate={handleMessagesUpdate}
               />
             )
           }

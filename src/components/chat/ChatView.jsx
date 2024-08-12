@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { Input } from "@/components/ui/input"
 import classNames from "classnames"
-import { xml } from "@xmpp/client"
 
 const ChatMessage = ({ message, from, right }) => {
   return (
@@ -20,32 +19,31 @@ const ChatMessage = ({ message, from, right }) => {
   )
 }
 
-const ChatView = ({ title, client, from }) => {
-  const [messageData, setMessageData] = React.useState("")
+const ChatView = ({ title, client, from, onMessagesUpdate }) => {
+  const [messageData, setMessageData] = useState("")
   const [messages, setMessages] = useState([])
 
-  // const handleKeyDown = (event) => {
-  //   if (event.key === "Enter") {
-  //     client.sendMessage(title.split("/")[0], messageData)
-  //     setMessageData("")
-  //   }
-  // }
-
-  const user = client.users.find((user) => user.jid === title)
+  // Optimización de la función de manejo de eventos
+  const handleKeyDown = useCallback(
+    (event) => {
+      if (event.key === "Enter") {
+        client.sendMessage(title.split("/")[0], messageData)
+        setMessageData("")
+      }
+    },
+    [client, title, messageData]
+  )
 
   useEffect(() => {
+    // Obtener usuario solo cuando title o client.users cambien
     const user = client.users.find((user) => user.jid === title)
     if (user) {
       setMessages(user.messages)
+      if (onMessagesUpdate) {
+        onMessagesUpdate(user.messages)
+      }
     }
-  }, [title, client.users])
-
-  const handleKeyDown = (event) => {
-    if (event.key === "Enter") {
-      client.sendMessage(title.split("/")[0], messageData)
-      setMessageData("")
-    }
-  }
+  }, [title, client.users, onMessagesUpdate]) // Asegúrate de que estas dependencias no cambien en cada renderizado
 
   return (
     <div className="flex flex-col w-full ml-8">
@@ -54,23 +52,16 @@ const ChatView = ({ title, client, from }) => {
       </div>
 
       <div className="flex flex-col gap-2 mt-auto mb-4 overflow-auto">
-        {
-          // Si user es diferente de undefined, se muestra el historial de mensajes
-          user &&
-            user.messages.map((message, index) => {
-              return (
-                <ChatMessage
-                  key={index}
-                  message={message.message}
-                  from={message.from}
-                  right={
-                    message.from.split("@")[0] ===
-                    client.xmppClient.jid.getLocal()
-                  }
-                />
-              )
-            })
-        }
+        {messages.map((message, index) => (
+          <ChatMessage
+            key={index}
+            message={message.message}
+            from={message.from}
+            right={
+              message.from.split("@")[0] === client.xmppClient.jid.getLocal()
+            }
+          />
+        ))}
       </div>
 
       <div>
