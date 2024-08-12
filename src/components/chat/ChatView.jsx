@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react"
+"use client"
+
+import React, { useState, useEffect, useCallback, useMemo } from "react"
 import { Input } from "@/components/ui/input"
 import classNames from "classnames"
 
@@ -23,10 +25,10 @@ const ChatView = ({ title, client, from, onMessagesUpdate }) => {
   const [messageData, setMessageData] = useState("")
   const [messages, setMessages] = useState([])
 
-  // Optimización de la función de manejo de eventos
+  // Memorizar la función de manejo de eventos
   const handleKeyDown = useCallback(
     (event) => {
-      if (event.key === "Enter") {
+      if (event.key === "Enter" && messageData.trim() !== "") {
         client.sendMessage(title.split("/")[0], messageData)
         setMessageData("")
       }
@@ -34,16 +36,46 @@ const ChatView = ({ title, client, from, onMessagesUpdate }) => {
     [client, title, messageData]
   )
 
+  // Memorizar el usuario seleccionado
+  const user = useMemo(
+    () => client.users.find((user) => user.jid === title),
+    [title, client.users]
+  )
+
   useEffect(() => {
-    // Obtener usuario solo cuando title o client.users cambien
-    const user = client.users.find((user) => user.jid === title)
     if (user) {
       setMessages(user.messages)
       if (onMessagesUpdate) {
         onMessagesUpdate(user.messages)
       }
     }
-  }, [title, client.users, onMessagesUpdate]) // Asegúrate de que estas dependencias no cambien en cada renderizado
+  }, [user, onMessagesUpdate])
+
+  useEffect(() => {
+    const handleNewMessage = (stanza) => {
+      if (stanza.is("message")) {
+        const from = stanza.attrs.from
+        const message = stanza.getChildText("body")
+        setMessages((prevMessages) => {
+          const updatedMessages = [...prevMessages, { message, from }]
+          if (onMessagesUpdate) {
+            onMessagesUpdate(updatedMessages)
+          }
+          return updatedMessages
+        })
+      }
+    }
+
+    if (client) {
+      client.xmppClient.on("stanza", handleNewMessage)
+    }
+
+    return () => {
+      if (client) {
+        client.xmppClient.off("stanza", handleNewMessage)
+      }
+    }
+  }, [client, onMessagesUpdate])
 
   return (
     <div className="flex flex-col w-full ml-8">
