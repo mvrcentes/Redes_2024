@@ -10,6 +10,19 @@ import {
 import { Button } from "@/components/ui/button"
 import { XMPPContext } from "@/context/xmppContext"
 
+const ContactCard = ({ contact }) => {
+  return (
+    <div>
+      <div>
+        <p className="text-md font-bold">{contact.jid}</p>
+        <p className="text-sm">Status: {contact.status}</p>
+        <p className="text-sm">Show: {contact.show}</p>
+      </div>
+      <hr />
+    </div>
+  )
+}
+
 const Contacts = () => {
   const { xmppClientProvider } = useContext(XMPPContext)
   const [contacts, setContacts] = useState([])
@@ -21,6 +34,11 @@ const Contacts = () => {
       try {
         const updatedContacts = await xmppClientProvider.getRoster()
         setContacts(updatedContacts)
+
+        // Escuchar cambios en el estado de los contactos
+        xmppClientProvider.setContactsUpdateListener((updatedContacts) => {
+          setContacts([...updatedContacts]) // Asegúrate de crear un nuevo array para forzar el renderizado
+        })
       } catch (error) {
         console.error("Error fetching contacts:", error)
       }
@@ -45,7 +63,9 @@ const Contacts = () => {
         </SheetHeader>
         <div>
           {contacts.length > 0 ? (
-            contacts.map((contact, index) => <p key={index}>{contact.jid}</p>)
+            contacts.map((contact, index) => (
+              <ContactCard key={index} contact={contact} />
+            ))
           ) : (
             <p>No contacts available</p>
           )}

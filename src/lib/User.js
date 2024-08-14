@@ -4,6 +4,7 @@ class User {
     this.status = ""
     this.messages = []
     this.status = ""
+    this.show = ""
   }
 }
 

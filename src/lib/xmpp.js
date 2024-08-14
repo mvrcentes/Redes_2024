@@ -39,6 +39,8 @@ class XMPPCLient {
         path: "/",
       })
 
+      await this.handlePresenceUpdates()
+
       this.xmppClient.on("stanza", (stanza) => {
         console.log("Incoming stanza:", stanza.toString())
 
@@ -73,11 +75,18 @@ class XMPPCLient {
         this.xmppClient.send(iq)
 
         this.xmppClient.on("stanza", (stanza) => {
+          const from = stanza.attrs.from
+          const status = stanza.getChildText("status") || ""
+          const show = stanza.getChildText("show") || ""
+
           if (stanza.is("iq") && stanza.attrs.type === "result") {
             const query = stanza.getChild("query", "jabber:iq:roster")
             if (query) {
               const items = query.getChildren("item")
-              this.contacts = items.map((item) => new User(item.attrs.jid))
+              this.contacts = items.map((item) => {
+                const jid = item.attrs.jid
+                return new User(jid)
+              })
               resolve(this.contacts)
             }
           }
@@ -88,7 +97,35 @@ class XMPPCLient {
       }
     })
   }
-  
+
+  async handlePresenceUpdates() {
+    this.xmppClient.on("stanza", (stanza) => {
+      if (stanza.is("presence")) {
+        const from = stanza.attrs.from
+        const status = stanza.getChildText("status") || ""
+        const show = stanza.getChildText("show") || ""
+
+        const contact = this.contacts.find(
+          (user) => user.jid === from.split("/")[0]
+        )
+        if (contact) {
+          contact.status = status
+          contact.show = show
+          this.notifyContactsUpdate()
+        }
+      }
+    })
+  }
+
+  // Notifica a los listeners que los contactos han sido actualizados
+  notifyContactsUpdate() {
+    this.notificationListeners.forEach((callback) => callback(this.contacts))
+  }
+
+  setContactsUpdateListener(callback) {
+    this.notificationListeners.push(callback)
+  }
+
   async close() {
     if (this.xmppClient) {
       try {
