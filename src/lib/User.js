@@ -3,6 +3,7 @@ class User {
     this.jid = name;
     this.status = ""
     this.messages = []
+    this.status = ""
   }
 }
 

@@ -12,6 +12,7 @@ class XMPPCLient {
     this.notifications = []
     this.notificationListeners = []
     this.users = []
+    this.presenceStatuses = {}
   }
 
   async initialize() {
@@ -46,6 +47,23 @@ class XMPPCLient {
       })
       await this.xmppClient.send(xml("presence"))
     })
+
+    // this.xmppClient.on("stanza", (stanza) => {
+    //   if (stanza.is("presence")) {
+    //     const from = stanza.attrs.from.split("/")[0]
+    //     const status = stanza.getChildText("status") || ""
+
+    //     let user = this.users.find((user) => user.jid === from);
+    //     if (!user) {
+    //       console.log(user)
+    //       user = new User(from)
+    //       this.users.push(user)
+    //     }
+
+    //     user.status = status
+
+    //   }
+    // })
 
     try {
       await this.xmppClient.start()
@@ -256,6 +274,22 @@ class XMPPCLient {
         }
       } catch (error) {
         console.error("Failed to reject contact request:", error)
+      }
+    }
+  }
+
+  async setPresence(presence) {
+    if (this.xmppClient) {
+      const presenceStanza = xml("presence", {}, xml("status", {}, presence))
+
+      try {
+        if (this.xmppClient.status === "online") {
+          console.log("Setting presence")
+          await this.xmppClient.send(presenceStanza)
+          console.log("Presence set")
+        }
+      } catch (error) {
+        console.error("Failed to set presence:", error)
       }
     }
   }

@@ -93,7 +93,7 @@ const Chats = () => {
               <ChatView
                 title={activeJid}
                 client={xmppClientProvider}
-                from={activeJid}
+                
                 onMessagesUpdate={handleMessagesUpdate}
               />
             )

@@ -1,5 +1,3 @@
-"use client"
-
 import React, { useState, useEffect, useCallback, useMemo } from "react"
 import { Input } from "@/components/ui/input"
 import classNames from "classnames"
@@ -21,61 +19,43 @@ const ChatMessage = ({ message, from, right }) => {
   )
 }
 
-const ChatView = ({ title, client, from, onMessagesUpdate }) => {
+const ChatView = ({ title, client, onMessagesUpdate }) => {
   const [messageData, setMessageData] = useState("")
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState([]) // Nuevo estado para almacenar los mensajes
 
-  // Memorizar la función de manejo de eventos
+  // Manejar el envío de mensajes
   const handleKeyDown = useCallback(
     (event) => {
       if (event.key === "Enter" && messageData.trim() !== "") {
         client.sendMessage(title.split("/")[0], messageData)
         setMessageData("")
+        // Añadir el mensaje enviado a la lista de mensajes
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { message: messageData, from: client.xmppClient.jid.getLocal() },
+        ])
+        if (onMessagesUpdate) {
+          onMessagesUpdate([
+            ...messages,
+            { message: messageData, from: client.xmppClient.jid.getLocal() },
+          ])
+        }
       }
     },
-    [client, title, messageData]
+    [client, title, messageData, messages, onMessagesUpdate]
   )
 
-  // Memorizar el usuario seleccionado
   const user = useMemo(
     () => client.users.find((user) => user.jid === title),
     [title, client.users]
   )
 
+  // Efecto para actualizar mensajes al cambiar de usuario o recibir nuevos mensajes
   useEffect(() => {
     if (user) {
       setMessages(user.messages)
-      if (onMessagesUpdate) {
-        onMessagesUpdate(user.messages)
-      }
     }
   }, [user, onMessagesUpdate])
-
-  useEffect(() => {
-    const handleNewMessage = (stanza) => {
-      if (stanza.is("message")) {
-        const from = stanza.attrs.from
-        const message = stanza.getChildText("body")
-        setMessages((prevMessages) => {
-          const updatedMessages = [...prevMessages, { message, from }]
-          if (onMessagesUpdate) {
-            onMessagesUpdate(updatedMessages)
-          }
-          return updatedMessages
-        })
-      }
-    }
-
-    if (client) {
-      client.xmppClient.on("stanza", handleNewMessage)
-    }
-
-    return () => {
-      if (client) {
-        client.xmppClient.off("stanza", handleNewMessage)
-      }
-    }
-  }, [client, onMessagesUpdate])
 
   return (
     <div className="flex flex-col w-full ml-8">
