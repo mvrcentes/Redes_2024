@@ -89,7 +89,11 @@ class XMPPCLient {
 
             console.log("from", from)
 
-            if (!this.users.find((user) => user.jid === from)) {
+            if (
+              !this.users.find((user) => user.jid === from) &&
+              from !== null &&
+              from !== ""
+            ) {
               // Si no está, agrega un nuevo usuario
               this.users.push(new User(from))
             }
@@ -137,6 +141,14 @@ class XMPPCLient {
             from: this.xmppClient.jid.toString(),
           })
           this.notifyUserUpdate(jid) // Notifica que se ha actualizado el usuario
+        } else {
+          this.users.push(new User(jid))
+          const to = this.users.find((user) => user.jid === jid)
+          to.messages.push({
+            message: messageData,
+            from: this.xmppClient.jid.toString(),
+          })
+          console.log(this.users)
         }
       } catch (error) {
         console.log("Failed to send message:", error)

@@ -5,6 +5,7 @@ import Sidebar from "../Sidebard/Sidebar"
 import { XMPPContext } from "@/context/xmppContext"
 import Conversation from "./Conversation"
 import ChatView from "./ChatView"
+import SendMessage from "./SendMessage"
 
 const Chats = () => {
   const { xmppClientProvider } = useContext(XMPPContext)
@@ -51,7 +52,6 @@ const Chats = () => {
       console.log("xmppClientProvider:", xmppClientProvider)
       fetchConversations()
       xmppClientProvider.getConversations()
-
     } else {
       console.log("XMPP Client not initialized")
     }
@@ -69,11 +69,13 @@ const Chats = () => {
       <Sidebar />
       <div className="h-full p-6 bg-white rounded-xl w-full">
         <div className="h-full flex flex-row">
-          <div className="flex flex-col">
-            <h2 className="text-xl font-bold mb-4">Active Chats</h2>
+          <div className="flex flex-col min-w-[300px]">
+            <div className="flex flex-row items-center">
+              <h2 className="text-xl font-bold">Active Chats</h2>
+              <SendMessage />
+            </div>
             {xmppClientProvider &&
               xmppClientProvider.users.map((user, index) => {
-                // console.log("User:", user)
                 return (
                   <Conversation
                     key={index}
