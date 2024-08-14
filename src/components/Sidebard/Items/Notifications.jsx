@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { UserRoundSearch } from "lucide-react"
+import { Bell } from "lucide-react"
 import { XMPPContext } from "@/context/xmppContext"
 
 const NotificationCard = ({
@@ -97,7 +97,7 @@ const Notifications = () => {
       <SheetTrigger>
         <Button className="bg-transparent hover:bg-transparent px-0">
           <div className="flex flex-col items-center justify-center gap-1">
-            <UserRoundSearch height={24} width={24} color="#898787" />
+            <Bell height={24} width={24} color="#898787" />
             <p className="text-[10px]">Notifications</p>
           </div>
         </Button>
