@@ -13,6 +13,7 @@ class XMPPCLient {
     this.notificationListeners = []
     this.users = []
     this.presenceStatuses = {}
+    this.contacts = []
   }
 
   async initialize() {
@@ -48,23 +49,6 @@ class XMPPCLient {
       await this.xmppClient.send(xml("presence"))
     })
 
-    // this.xmppClient.on("stanza", (stanza) => {
-    //   if (stanza.is("presence")) {
-    //     const from = stanza.attrs.from.split("/")[0]
-    //     const status = stanza.getChildText("status") || ""
-
-    //     let user = this.users.find((user) => user.jid === from);
-    //     if (!user) {
-    //       console.log(user)
-    //       user = new User(from)
-    //       this.users.push(user)
-    //     }
-
-    //     user.status = status
-
-    //   }
-    // })
-
     try {
       await this.xmppClient.start()
       console.log("XMPP Client started")
@@ -73,6 +57,38 @@ class XMPPCLient {
     }
   }
 
+  async getRoster() {
+    if (!this.xmppClient) {
+      console.error("XMPP client not initialized")
+      return
+    }
+
+    return new Promise((resolve, reject) => {
+      try {
+        const iq = xml(
+          "iq",
+          { type: "get", id: "roster_1" },
+          xml("query", "jabber:iq:roster")
+        )
+        this.xmppClient.send(iq)
+
+        this.xmppClient.on("stanza", (stanza) => {
+          if (stanza.is("iq") && stanza.attrs.type === "result") {
+            const query = stanza.getChild("query", "jabber:iq:roster")
+            if (query) {
+              const items = query.getChildren("item")
+              this.contacts = items.map((item) => new User(item.attrs.jid))
+              resolve(this.contacts)
+            }
+          }
+        })
+      } catch (error) {
+        console.error("Failed to get roster:", error)
+        reject(error)
+      }
+    })
+  }
+  
   async close() {
     if (this.xmppClient) {
       try {
@@ -293,9 +309,6 @@ class XMPPCLient {
       }
     }
   }
-  // Setters
-
-  // Getters
 }
 
 export default XMPPCLient
