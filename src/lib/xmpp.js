@@ -106,25 +106,44 @@ class XMPPCLient {
         const status = stanza.getChildText("status") || ""
         let show = stanza.getChildText("show") || ""
 
+        const contact = this.contacts.find(
+          (user) => user.jid === from.split("/")[0]
+        )
+
         // Asumir que la presencia es "available" si no hay <show> y el tipo es "available"
         if (!show && type === "available") {
           show = "available"
+          this.notifications.push({
+            from,
+            type: "presence",
+            message: `${from} is online`,
+          })
+          this.notifyNotificationChange() // Notificar después de agregar la notificación
         }
 
         // Si el tipo de presencia es "unavailable"
         if (type === "unavailable") {
           show = "unavailable"
+          this.notifications.push({
+            from,
+            type: "presence",
+            message: `${from} is offline`,
+          })
+          this.notifyNotificationChange()
         }
 
         // Manejo del nodo <idle>
         const idle = stanza.getChild("idle", "urn:xmpp:idle:1")
         if (idle) {
           show = "idle"
+          this.notifications.push({
+            from,
+            type: "presence",
+            message: `${from} is idle`,
+          })
+          this.notifyNotificationChange()
         }
 
-        const contact = this.contacts.find(
-          (user) => user.jid === from.split("/")[0]
-        )
         if (contact) {
           contact.status = status
           contact.show = show
@@ -132,6 +151,13 @@ class XMPPCLient {
         }
       }
     })
+  }
+
+  // Notificar a los listeners que hay una nueva notificación
+  notifyNotificationChange() {
+    this.notificationListeners.forEach((callback) =>
+      callback(this.notifications)
+    )
   }
 
   // Notifica a los listeners que los contactos han sido actualizados

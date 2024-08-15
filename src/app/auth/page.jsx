@@ -1,9 +1,11 @@
-import React from 'react'
-import Auth from '@/components/auth/Auth'
+import React from "react"
+import Auth from "@/components/auth/Auth"
 
 const page = () => {
   return (
-    <Auth />
+    <div className="h-dvh w-full flex items-center justify-center">
+      <Auth />
+    </div>
   )
 }
 

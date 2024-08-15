@@ -58,7 +58,6 @@ const Auth = () => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="w-2/3 space-y-6">
-        <div className="text-3xl">hola</div>
         <CustomFormField
           control={form.control}
           fieldType={"input"}

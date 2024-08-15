@@ -12,7 +12,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Bell } from "lucide-react"
 import { XMPPContext } from "@/context/xmppContext"
@@ -23,10 +22,15 @@ const NotificationCard = ({
   onAccept,
   onReject,
 }) => {
+  // Clase condicional para cambiar el fondo si la notificación es nueva
+  const cardClassName = notification.isNew
+    ? "bg-blue-100 p-2 rounded-md"
+    : "bg-white p-2 rounded-md"
+
   switch (notification.type) {
     case "subscribe":
       return (
-        <div className="flex items-center gap-2">
+        <div className={`flex items-center gap-2 ${cardClassName}`}>
           <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
           <div className="w-full">
             <p className="font-bold">{notification.from}</p>
@@ -49,21 +53,55 @@ const NotificationCard = ({
         </div>
       )
 
-      break
+    case "presence":
+      return (
+        <div className={`flex items-center gap-2 ${cardClassName}`}>
+          <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+          <div className="w-full">
+            <p className="font-bold">{notification.from}</p>
+            <p className="text-[10px]">{notification.message}</p>
+          </div>
+        </div>
+      )
 
     default:
-      break
+      return null
   }
 }
 
 const Notifications = () => {
   const { xmppClientProvider } = useContext(XMPPContext)
   const [notifications, setNotifications] = useState([])
+  const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
     if (xmppClientProvider) {
       const handleNotificationChange = (newNotifications) => {
-        setNotifications([...newNotifications])
+        setNotifications((prevNotifications) => {
+          const newUniqueNotifications = newNotifications.filter(
+            (newNotif) =>
+              !prevNotifications.some(
+                (prevNotif) =>
+                  prevNotif.from === newNotif.from &&
+                  prevNotif.message === newNotif.message &&
+                  prevNotif.type === newNotif.type
+              )
+          )
+
+          const updatedNotifications = newUniqueNotifications.map(
+            (notification) => ({
+              ...notification,
+              isNew: true, // Marcar la notificación como nueva
+            })
+          )
+
+          return [...updatedNotifications.reverse(), ...prevNotifications]
+        })
+
+        // Aumentar el contador sólo si hay nuevas notificaciones agregadas
+        if (newNotifications.length > 0) {
+          setUnreadCount((prevCount) => prevCount + newNotifications.length)
+        }
       }
 
       xmppClientProvider.receiveContactRequest()
@@ -79,7 +117,6 @@ const Notifications = () => {
   const handleAccept = (jid) => {
     if (xmppClientProvider) {
       xmppClientProvider.acceptContactRequest(jid)
-      
       setNotifications(xmppClientProvider.notifications)
     }
   }
@@ -87,34 +124,52 @@ const Notifications = () => {
   const handleReject = (jid) => {
     if (xmppClientProvider) {
       xmppClientProvider.rejectContactRequest(jid)
-      
       setNotifications(xmppClientProvider.notifications)
     }
   }
 
+  const handleOpenNotifications = () => {
+    setNotifications((prevNotifications) =>
+      prevNotifications.map((notification) => ({
+        ...notification,
+        isNew: false, // Marcar todas las notificaciones como vistas
+      }))
+    )
+    setUnreadCount(0)
+  }
+
   return (
     <Sheet>
-      <SheetTrigger>
-        <Button className="bg-transparent hover:bg-transparent px-0">
+      <SheetTrigger onClick={handleOpenNotifications}>
+        <Button className="bg-transparent hover:bg-transparent px-0 relative">
           <div className="flex flex-col items-center justify-center gap-1">
             <Bell height={24} width={24} color="#898787" />
             <p className="text-[10px]">Notifications</p>
           </div>
+          {unreadCount > 0 && (
+            <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+              {unreadCount}
+            </span>
+          )}
         </Button>
       </SheetTrigger>
       <SheetContent side="left">
         <SheetHeader>
           <SheetTitle>Notifications</SheetTitle>
-          {notifications.map((notification, index) => (
-            <NotificationCard
-              key={index}
-              notification={notification}
-              xmppClientProvider={xmppClientProvider}
-              onAccept={handleAccept}
-              onReject={handleReject}
-            />
-          ))}
         </SheetHeader>
+        <div className="overflow-y-auto h-full">
+          <div className="overflow-y-auto max-h-[400px]">
+            {notifications.map((notification, index) => (
+              <NotificationCard
+                key={index}
+                notification={notification}
+                xmppClientProvider={xmppClientProvider}
+                onAccept={handleAccept}
+                onReject={handleReject}
+              />
+            ))}
+          </div>
+        </div>
       </SheetContent>
     </Sheet>
   )

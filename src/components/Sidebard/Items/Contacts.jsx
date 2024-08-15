@@ -32,7 +32,7 @@ const ContactCard = ({ contact }) => {
     <div className="flex flex-row items-center gap-2">
       <div className="relative">
         <div className="w-10 h-10 bg-gray-400 text-white rounded-full flex items-center justify-center text-lg font-bold">
-          {contact.jid.charAt(0).toUpperCase()}
+          {contact.jid?.charAt(0).toUpperCase()}
         </div>
         <div
           className="w-3 h-3 rounded-full absolute bottom-0 right-0"
