@@ -12,7 +12,7 @@ const Conversation = ({ active, onClick, user }) => {
       })}
       onClick={onClick}>
       <UserRound color="#898787" height={56} width={56} />
-      <div className="min-h-[48px] flex flex-col justify-between items-start">
+      <div className="min-h-[48px] w-auto flex flex-col justify-between items-start overflow-hidden">
         <p className="text-md text-black">{user.jid.split("@")[0]}</p>
         <p className="text-xs text-gray-400">
           {user.messages[user.messages.length - 1].message}
