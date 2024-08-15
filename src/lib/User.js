@@ -4,7 +4,7 @@ class User {
     this.status = ""
     this.messages = []
     this.status = ""
-    this.show = ""
+    this.show = "unavailable"
   }
 }
 

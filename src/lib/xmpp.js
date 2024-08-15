@@ -102,8 +102,25 @@ class XMPPCLient {
     this.xmppClient.on("stanza", (stanza) => {
       if (stanza.is("presence")) {
         const from = stanza.attrs.from
+        const type = stanza.attrs.type || "available" // Si no hay un tipo, se asume que es "available"
         const status = stanza.getChildText("status") || ""
-        const show = stanza.getChildText("show") || ""
+        let show = stanza.getChildText("show") || ""
+
+        // Asumir que la presencia es "available" si no hay <show> y el tipo es "available"
+        if (!show && type === "available") {
+          show = "available"
+        }
+
+        // Si el tipo de presencia es "unavailable"
+        if (type === "unavailable") {
+          show = "unavailable"
+        }
+
+        // Manejo del nodo <idle>
+        const idle = stanza.getChild("idle", "urn:xmpp:idle:1")
+        if (idle) {
+          show = "idle"
+        }
 
         const contact = this.contacts.find(
           (user) => user.jid === from.split("/")[0]

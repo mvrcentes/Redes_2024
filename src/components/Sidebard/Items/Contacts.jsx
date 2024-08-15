@@ -11,12 +11,40 @@ import { Button } from "@/components/ui/button"
 import { XMPPContext } from "@/context/xmppContext"
 
 const ContactCard = ({ contact }) => {
+  // Determinar el color del estado basado en `contact.show`
+  let statusColor
+  switch (contact.show) {
+    case "available":
+      statusColor = "#28c840"
+      break
+    case "idle":
+      statusColor = "#febb30"
+      break
+    case "unavailable":
+      statusColor = "#80848e"
+      break
+    default:
+      statusColor = "#80848e" // Por defecto, si no hay un estado conocido
+      break
+  }
+
   return (
-    <div>
-      <div>
+    <div className="flex flex-row items-center gap-2">
+      <div className="relative">
+        <div className="w-10 h-10 bg-gray-400 text-white rounded-full flex items-center justify-center text-lg font-bold">
+          {contact.jid.charAt(0).toUpperCase()}
+        </div>
+        <div
+          className="w-3 h-3 rounded-full absolute bottom-0 right-0"
+          style={{ backgroundColor: statusColor }}></div>
+      </div>
+      <div className="flex flex-col justify-center">
         <p className="text-md font-bold">{contact.jid}</p>
-        <p className="text-sm">Status: {contact.status}</p>
-        <p className="text-sm">Show: {contact.show}</p>
+        {/* <p className="text-sm">Status: {contact.status}</p> */}
+
+        {contact.status && <p className="text-sm">{contact.status}</p>}
+
+        {/* <p className="text-sm">Show: {contact.show}</p> */}
       </div>
       <hr />
     </div>
@@ -61,7 +89,7 @@ const Contacts = () => {
         <SheetHeader>
           <SheetTitle>Contacts</SheetTitle>
         </SheetHeader>
-        <div>
+        <div className="mt-2 flex flex-col gap-1">
           {contacts.length > 0 ? (
             contacts.map((contact, index) => (
               <ContactCard key={index} contact={contact} />
