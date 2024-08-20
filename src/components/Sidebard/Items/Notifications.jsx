@@ -148,7 +148,7 @@ const Notifications = () => {
           </div>
           {unreadCount > 0 && (
             <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-              {unreadCount}
+              
             </span>
           )}
         </Button>
@@ -158,7 +158,7 @@ const Notifications = () => {
           <SheetTitle>Notifications</SheetTitle>
         </SheetHeader>
         <div className="overflow-y-auto h-full">
-          <div className="overflow-y-auto max-h-[400px]">
+          <div className="overflow-y-auto max-h-full">
             {notifications.map((notification, index) => (
               <NotificationCard
                 key={index}

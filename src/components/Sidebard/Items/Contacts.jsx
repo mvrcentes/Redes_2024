@@ -40,11 +40,7 @@ const ContactCard = ({ contact }) => {
       </div>
       <div className="flex flex-col justify-center">
         <p className="text-md font-bold">{contact.jid}</p>
-        {/* <p className="text-sm">Status: {contact.status}</p> */}
-
         {contact.status && <p className="text-sm">{contact.status}</p>}
-
-        {/* <p className="text-sm">Show: {contact.show}</p> */}
       </div>
       <hr />
     </div>
@@ -55,16 +51,20 @@ const Contacts = () => {
   const { xmppClientProvider } = useContext(XMPPContext)
   const [contacts, setContacts] = useState([])
 
+  console.log("Current contacts state:", contacts) // Verificar el estado de contactos actual
+
   useEffect(() => {
     const handleContactsUpdate = async () => {
       if (!xmppClientProvider) return
 
       try {
         const updatedContacts = await xmppClientProvider.getRoster()
+        console.log("Updated contacts from roster:", updatedContacts)
         setContacts(updatedContacts)
 
         // Escuchar cambios en el estado de los contactos
         xmppClientProvider.setContactsUpdateListener((updatedContacts) => {
+          console.log("Contacts updated from listener:", updatedContacts)
           setContacts([...updatedContacts]) // Asegúrate de crear un nuevo array para forzar el renderizado
         })
       } catch (error) {
@@ -73,6 +73,12 @@ const Contacts = () => {
     }
 
     handleContactsUpdate()
+
+    // Cleanup function
+    return () => {
+      console.log("Cleaning up contacts listener")
+      xmppClientProvider?.setContactsUpdateListener(() => {})
+    }
   }, [xmppClientProvider])
 
   return (
