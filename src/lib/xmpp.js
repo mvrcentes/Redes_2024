@@ -1,5 +1,6 @@
 import { client, xml } from "@xmpp/client"
 import { setCookie, destroyCookie } from "nookies"
+import axios from "axios"
 import User from "./User"
 
 class XMPPCLient {
@@ -75,19 +76,22 @@ class XMPPCLient {
         this.xmppClient.send(iq)
 
         this.xmppClient.on("stanza", (stanza) => {
-          const from = stanza.attrs.from
-          const status = stanza.getChildText("status") || ""
-          const show = stanza.getChildText("show") || ""
-
           if (stanza.is("iq") && stanza.attrs.type === "result") {
             const query = stanza.getChild("query", "jabber:iq:roster")
             if (query) {
               const items = query.getChildren("item")
               this.contacts = items.map((item) => {
                 const jid = item.attrs.jid
-                return new User(jid)
+
+                let contact = this.contacts.find((c) => c.jid === jid)
+                if (!contact) {
+                  contact = new User(jid)
+                  this.contacts.push(contact)
+                }
+                return contact
               })
               resolve(this.contacts)
+              this.notifyContactsUpdate()
             }
           }
         })
@@ -100,28 +104,42 @@ class XMPPCLient {
 
   async handlePresenceUpdates() {
     this.xmppClient.on("stanza", (stanza) => {
+      console.log(stanza.toString(), `from ${this.xmppClient.jid.getLocal()}`)
       if (stanza.is("presence")) {
         const from = stanza.attrs.from
         const type = stanza.attrs.type || "available" // Si no hay un tipo, se asume que es "available"
         const status = stanza.getChildText("status") || ""
         let show = stanza.getChildText("show") || ""
 
-        const contact = this.contacts.find(
+        let contact = this.contacts.find(
           (user) => user.jid === from.split("/")[0]
         )
 
-        // Asumir que la presencia es "available" si no hay <show> y el tipo es "available"
-        if (!show && type === "available") {
+        if (!contact) {
+          this.contacts.push(new User(from.split("/")[0]))
+          return
+        }
+
+        contact = this.contacts.find((user) => user.jid === from.split("/")[0])
+
+        if (
+          show === "chat" ||
+          type === "available" ||
+          stanza.name === "presence"
+        ) {
+          console.log(
+            `funciono con la stanza desde ${this.xmppClient.jid.getLocal()}`,
+            stanza.toString()
+          )
           show = "available"
           this.notifications.push({
             from,
             type: "presence",
             message: `${from} is online`,
           })
-          this.notifyNotificationChange() // Notificar después de agregar la notificación
+          this.notifyNotificationChange()
         }
 
-        // Si el tipo de presencia es "unavailable"
         if (type === "unavailable") {
           show = "unavailable"
           this.notifications.push({
@@ -132,7 +150,6 @@ class XMPPCLient {
           this.notifyNotificationChange()
         }
 
-        // Manejo del nodo <idle>
         const idle = stanza.getChild("idle", "urn:xmpp:idle:1")
         if (idle) {
           show = "idle"
@@ -246,7 +263,7 @@ class XMPPCLient {
 
       try {
         await this.xmppClient.send(message)
-        console.log("Message sent")
+        console.log("Message sent:", messageData)
 
         const to = this.users.find((user) => user.jid === jid)
         if (to) {
@@ -387,6 +404,34 @@ class XMPPCLient {
       } catch (error) {
         console.error("Failed to set presence:", error)
       }
+    }
+  }
+
+  async uploadFileToServer(file) {
+    console.log(file)
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+
+      const response = await fetch("/api/", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to upload file")
+      }
+
+      const data = await response.json()
+      if (data.url) {
+        console.log("File uploaded successfully:", data.url)
+        return data.url
+      } else {
+        throw new Error("No URL returned from upload")
+      }
+    } catch (error) {
+      console.error("Failed to upload file:", error)
+      throw error
     }
   }
 }
