@@ -17,6 +17,7 @@
     "@radix-ui/react-toast": "^1.2.1",
     "@xmpp/client": "^0.13.1",
     "@xmpp/debug": "^0.13.0",
+    "axios": "^1.7.4",
     "class-variance-authority": "^0.7.0",
     "classnames": "^2.5.1",
     "clsx": "^2.1.1",
