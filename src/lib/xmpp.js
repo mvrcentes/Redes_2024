@@ -434,6 +434,79 @@ class XMPPCLient {
       throw error
     }
   }
+
+  async removeContact(jid) {
+    if (!this.xmppClient) {
+      console.error("XMPP client not initialized")
+      return
+    }
+
+    try {
+      // Crear la solicitud IQ para eliminar el contacto
+      const iq = xml(
+        "iq",
+        { type: "set", id: "remove_1" },
+        xml(
+          "query",
+          { xmlns: "jabber:iq:roster" },
+          xml("item", { jid: jid, subscription: "remove" })
+        )
+      )
+
+      // Enviar la solicitud al servidor
+      await this.sendIq(iq)
+      console.log(`Contact ${jid} removed from roster`)
+
+      // Actualizar la lista de contactos localmente
+      this.contacts = this.contacts.filter((contact) => contact.jid !== jid)
+      this.notifyContactsUpdate() // Notificar a los listeners que los contactos han sido actualizados
+    } catch (error) {
+      console.error(`Failed to remove contact ${jid}:`, error)
+    }
+  }
+
+  async removeContact(jid) {
+    if (!this.xmppClient) {
+      console.error("XMPP client not initialized")
+      return
+    }
+
+    try {
+      // Crear la solicitud IQ para eliminar el contacto
+      const iq = xml(
+        "iq",
+        { type: "set", id: "remove_1" },
+        xml(
+          "query",
+          { xmlns: "jabber:iq:roster" },
+          xml("item", { jid: jid, subscription: "remove" })
+        )
+      )
+
+      // Enviar la solicitud al servidor
+      await this.sendIq(iq)
+      console.log(`Contact ${jid} removed from roster`)
+
+      // Actualizar la lista de contactos localmente
+      this.contacts = this.contacts.filter((contact) => contact.jid !== jid)
+      this.notifyContactsUpdate() // Notificar a los listeners que los contactos han sido actualizados
+    } catch (error) {
+      console.error(`Failed to remove contact ${jid}:`, error)
+    }
+  }
+
+  sendIq(iq) {
+    return new Promise((resolve, reject) => {
+      this.xmppClient.send(iq)
+      this.xmppClient.on("stanza", (stanza) => {
+        if (stanza.is("iq") && stanza.attrs.type === "result") {
+          resolve(stanza)
+        } else if (stanza.is("iq") && stanza.attrs.type === "error") {
+          reject(new Error("Error response from server"))
+        }
+      })
+    })
+  }
 }
 
 export default XMPPCLient

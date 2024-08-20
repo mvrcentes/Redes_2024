@@ -14,7 +14,32 @@ import { XMPPContext } from "@/context/xmppContext"
 
 const ProfileInformation = ({ className, user }) => {
   const { xmppClientProvider } = useContext(XMPPContext)
-  const [contact, setContact] = useState(user) // Inicializar con el usuario proporcionado
+  const [contact, setContact] = useState(user)
+  const [isInContacts, setIsInContacts] = useState(false)
+
+  const handleRemoveContact = async () => {
+    if (xmppClientProvider && user?.jid) {
+      try {
+        await xmppClientProvider.removeContact(user.jid)
+        console.log(`Contact ${user.jid} removed successfully`)
+        setIsInContacts(false)
+      } catch (error) {
+        console.error("Failed to remove contact:", error)
+      }
+    }
+  }
+
+  const handleAddContact = async () => {
+    if (xmppClientProvider && user?.jid) {
+      try {
+        await xmppClientProvider.sendContactRequest(user.jid)
+        console.log(`Contact request sent to ${user.jid}`)
+        setIsInContacts(true)
+      } catch (error) {
+        console.error("Failed to send contact request:", error)
+      }
+    }
+  }
 
   useEffect(() => {
     const handleContactsUpdate = async () => {
@@ -22,18 +47,22 @@ const ProfileInformation = ({ className, user }) => {
 
       try {
         const updatedContacts = await xmppClientProvider.getRoster()
-
-        // Encuentra y actualiza solo el contacto específico
         const updatedContact = updatedContacts.find((c) => c.jid === user.jid)
+
         if (updatedContact) {
           setContact(updatedContact)
+          setIsInContacts(true)
+        } else {
+          setIsInContacts(false)
         }
 
-        // Escuchar cambios en el estado de los contactos
         xmppClientProvider.setContactsUpdateListener((updatedContacts) => {
           const updatedContact = updatedContacts.find((c) => c.jid === user.jid)
           if (updatedContact) {
             setContact(updatedContact)
+            setIsInContacts(true)
+          } else {
+            setIsInContacts(false)
           }
         })
       } catch (error) {
@@ -46,7 +75,7 @@ const ProfileInformation = ({ className, user }) => {
     return () => {
       xmppClientProvider?.setContactsUpdateListener(() => {})
     }
-  }, [xmppClientProvider, user.jid]) // Dependencia de user.jid para escuchar cambios solo de este usuario
+  }, [xmppClientProvider, user.jid])
 
   return (
     <Sheet>
@@ -73,15 +102,21 @@ const ProfileInformation = ({ className, user }) => {
         </div>
 
         <div className="px-4 py-2 space-y-2 mt-6">
-          <Button variant="destructive" className="w-full">
-            Block Contact
-          </Button>
-          <Button variant="destructive" className="w-full">
-            Remove from contacts
-          </Button>
-          <Button variant="destructive" className="w-full">
-            Clear chat history of this contact
-          </Button>
+          {isInContacts ? (
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={handleRemoveContact}>
+              Remove from contacts
+            </Button>
+          ) : (
+            <Button
+              variant="primary" // Cambia el color para agregar contacto
+              className="w-full"
+              onClick={handleAddContact}>
+              Add to contacts
+            </Button>
+          )}
         </div>
       </SheetContent>
     </Sheet>
