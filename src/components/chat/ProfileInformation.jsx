@@ -16,33 +16,37 @@ const ProfileInformation = ({ className, user }) => {
   const { xmppClientProvider } = useContext(XMPPContext)
   const [contact, setContact] = useState(user) // Inicializar con el usuario proporcionado
 
-  // useEffect(() => {
-  //   const handleContactsUpdate = async () => {
-  //     if (!xmppClientProvider) return
+  useEffect(() => {
+    const handleContactsUpdate = async () => {
+      if (!xmppClientProvider) return
 
-  //     try {
-  //       const updatedContacts = await xmppClientProvider.getRoster()
+      try {
+        const updatedContacts = await xmppClientProvider.getRoster()
 
-  //       // Encuentra y actualiza solo el contacto específico
-  //       const updatedContact = updatedContacts.find((c) => c.jid === user.jid)
-  //       if (updatedContact) {
-  //         setContact(updatedContact)
-  //       }
+        // Encuentra y actualiza solo el contacto específico
+        const updatedContact = updatedContacts.find((c) => c.jid === user.jid)
+        if (updatedContact) {
+          setContact(updatedContact)
+        }
 
-  //       // Escuchar cambios en el estado de los contactos
-  //       xmppClientProvider.setContactsUpdateListener((updatedContacts) => {
-  //         const updatedContact = updatedContacts.find((c) => c.jid === user.jid)
-  //         if (updatedContact) {
-  //           setContact(updatedContact)
-  //         }
-  //       })
-  //     } catch (error) {
-  //       console.error("Error fetching contacts:", error)
-  //     }
-  //   }
+        // Escuchar cambios en el estado de los contactos
+        xmppClientProvider.setContactsUpdateListener((updatedContacts) => {
+          const updatedContact = updatedContacts.find((c) => c.jid === user.jid)
+          if (updatedContact) {
+            setContact(updatedContact)
+          }
+        })
+      } catch (error) {
+        console.error("Error fetching contacts:", error)
+      }
+    }
 
-  //   handleContactsUpdate()
-  // }, [xmppClientProvider, user.jid]) // Dependencia de user.jid para escuchar cambios solo de este usuario
+    handleContactsUpdate()
+
+    return () => {
+      xmppClientProvider?.setContactsUpdateListener(() => {})
+    }
+  }, [xmppClientProvider, user.jid]) // Dependencia de user.jid para escuchar cambios solo de este usuario
 
   return (
     <Sheet>
@@ -59,9 +63,7 @@ const ProfileInformation = ({ className, user }) => {
           </SheetTitle>
         </SheetHeader>
 
-        {/* User Info Section */}
         <div className="flex flex-col items-center py-4">
-          {/* Circle with Initial */}
           <div className="w-24 h-24 bg-[#8BC34A] rounded-full flex items-center justify-center text-4xl font-bold">
             {contact.jid.charAt(0).toUpperCase()}
           </div>
@@ -70,37 +72,6 @@ const ProfileInformation = ({ className, user }) => {
           {contact.status && <p className="text-sm">{contact.status}</p>}
         </div>
 
-        {/* Status Section */}
-        {/* <div className="px-4 py-2">
-          <div className="flex items-center gap-2">
-            <span className="text-green-400">✓</span>
-            <p>Contact is not muted</p>
-          </div>
-          <div className="flex items-center gap-2 mt-2">
-            <span className="text-red-500">🔓</span>
-            <p>Messages are NOT encrypted</p>
-          </div>
-        </div> */}
-
-        {/* Options Section */}
-        {/* <div className="px-4 py-2 space-y-3">
-          <div className="text-lg">{contact.jid.split("@")[0]}</div>
-          <div className="flex justify-between items-center">
-            <p>Pin Chat</p>
-            <input type="checkbox" className="toggle toggle-sm" />
-          </div>
-          <div>
-            <p>Encryption Keys</p>
-          </div>
-          <div>
-            <p>Resources</p>
-          </div>
-          <div>
-            <p>Change Chat Background</p>
-          </div>
-        </div> */}
-
-        {/* Danger Section */}
         <div className="px-4 py-2 space-y-2 mt-6">
           <Button variant="destructive" className="w-full">
             Block Contact
