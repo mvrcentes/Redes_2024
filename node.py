@@ -1,0 +1,1 @@
+# Define la clase Node con sus métodos para manejar mensajes.
