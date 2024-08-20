@@ -15,6 +15,7 @@ class XMPPCLient {
     this.users = []
     this.presenceStatuses = {}
     this.contacts = []
+    this.isStanzaListenerAdded = false
   }
 
   async initialize() {
@@ -29,7 +30,6 @@ class XMPPCLient {
       password: this.password,
     })
 
-    // Configura los eventos del cliente XMPP
     this.xmppClient.on("error", (err) => console.log(err))
     this.xmppClient.on("offline", () => console.log("offline"))
     this.xmppClient.on("online", async () => {
@@ -42,13 +42,12 @@ class XMPPCLient {
 
       await this.handlePresenceUpdates()
 
-      this.xmppClient.on("stanza", (stanza) => {
-        console.log("Incoming stanza:", stanza.toString())
+      // Agregar listener solo si no está agregado
+      if (!this.isStanzaListenerAdded) {
+        this.xmppClient.on("stanza", (stanza) => this.handleStanza(stanza))
+        this.isStanzaListenerAdded = true // Marcar que el listener ha sido agregado
+      }
 
-        if (stanza.is("message")) {
-          console.log("Message:", stanza.getChildText("body"))
-        }
-      })
       await this.xmppClient.send(xml("presence"))
     })
 
@@ -209,46 +208,36 @@ class XMPPCLient {
     if (this.xmppClient) {
       try {
         this.xmppClient.on("stanza", (stanza) => {
-          console.log("Incoming stanza:", stanza.toString())
-          if (stanza.is("message")) {
-            console.log("Message:", stanza.getChildText("body"))
-            const from = stanza.attrs.from.slice(
-              0,
-              stanza.attrs.from.indexOf("/")
-            )
+          if (stanza.is("message") && stanza.attrs.type === "groupchat") {
+            const subject = stanza.getChildText("subject") || "No Subject"
             const message = stanza.getChildText("body")
+            const roomJid = stanza.attrs.from.split("/")[0]
 
-            console.log("from", from)
+            let chat = this.users.find((user) => user.subject === subject)
 
-            if (
-              !this.users.find((user) => user.jid === from) &&
-              from !== null &&
-              from !== ""
-            ) {
-              // Si no está, agrega un nuevo usuario
-              this.users.push(new User(from))
+            if (!chat) {
+              chat = new User(roomJid)
+              chat.subject = subject
+              this.users.push(chat)
             }
 
-            const user = this.users.find((user) => user.jid === from)
-            if (user) {
-              if (message !== null)
-                user.messages.push({
-                  message: message,
-                  from: from,
-                })
-              console.log(user.messages)
+            if (message) {
+              chat.messages.push({
+                message,
+                from: roomJid,
+              })
             }
+
+            console.log(this.users)
           }
-
-          console.log(this.users)
         })
       } catch (error) {
-        console.error("Failed to get roster:", error)
+        console.error("Failed to get conversations:", error)
       }
     }
   }
 
-  async sendMessage(jid, messageData) {
+  async sendMessage(jid, messageData, isGroupChat = false) {
     if (!this.xmppClient) {
       console.error("XMPP client not initialized")
       return
@@ -257,7 +246,7 @@ class XMPPCLient {
     if (this.xmppClient.status === "online") {
       const message = xml(
         "message",
-        { type: "chat", to: jid },
+        { type: isGroupChat ? "groupchat" : "chat", to: jid },
         xml("body", {}, messageData)
       )
 
@@ -265,22 +254,17 @@ class XMPPCLient {
         await this.xmppClient.send(message)
         console.log("Message sent:", messageData)
 
-        const to = this.users.find((user) => user.jid === jid)
-        if (to) {
-          to.messages.push({
-            message: messageData,
-            from: this.xmppClient.jid.toString(),
-          })
-          this.notifyUserUpdate(jid) // Notifica que se ha actualizado el usuario
-        } else {
-          this.users.push(new User(jid))
-          const to = this.users.find((user) => user.jid === jid)
-          to.messages.push({
-            message: messageData,
-            from: this.xmppClient.jid.toString(),
-          })
-          console.log(this.users)
+        let to = this.users.find((user) => user.jid === jid)
+        if (!to) {
+          to = new User(jid)
+          this.users.push(to)
         }
+        to.messages.push({
+          message: messageData,
+          from: this.xmppClient.jid.toString(),
+        })
+
+        this.notifyUserUpdate(jid)
       } catch (error) {
         console.log("Failed to send message:", error)
       }
@@ -506,6 +490,116 @@ class XMPPCLient {
         }
       })
     })
+  }
+
+  async acceptGroupChatInvite(roomJid, inviterJid) {
+    if (!this.xmppClient) {
+      console.error("XMPP client not initialized")
+      return
+    }
+
+    try {
+      const presence = xml(
+        "presence",
+        { to: roomJid + "/" + this.username },
+        xml("x", { xmlns: "http://jabber.org/protocol/muc" })
+      )
+
+      await this.xmppClient.send(presence)
+      console.log(`Joined the group chat: ${roomJid}`)
+
+      // Eliminar la notificación correspondiente
+      this.notifications = this.notifications.filter(
+        (notification) =>
+          !(
+            notification.from === roomJid && notification.inviter === inviterJid
+          )
+      )
+      this.notifyNotificationChange() // Notificar cambios en las notificaciones
+    } catch (error) {
+      console.error("Failed to accept group chat invite:", error)
+    }
+  }
+
+  async rejectGroupChatInvite(roomJid, inviterJid) {
+    if (!this.xmppClient) {
+      console.error("XMPP client not initialized")
+      return
+    }
+
+    try {
+      const message = xml(
+        "message",
+        { to: roomJid, type: "normal" },
+        xml("x", { xmlns: "http://jabber.org/protocol/muc#user" }),
+        xml("decline", { to: inviterJid })
+      )
+
+      await this.xmppClient.send(message)
+      console.log(`Declined the group chat invite from ${inviterJid}`)
+
+      // Eliminar la notificación correspondiente
+      this.notifications = this.notifications.filter(
+        (notification) =>
+          !(
+            notification.from === roomJid && notification.inviter === inviterJid
+          )
+      )
+      this.notifyNotificationChange() // Notificar cambios en las notificaciones
+    } catch (error) {
+      console.error("Failed to decline group chat invite:", error)
+    }
+  }
+
+  // Manejar la recepción de invitaciones a chat grupal
+  handleStanza(stanza) {
+    console.log("Incoming stanza:", stanza.toString())
+
+    if (stanza.is("message") && stanza.attrs.type === "groupchat") {
+      const from = stanza.attrs.from.split("/")[0]
+      const message = stanza.getChildText("body") || ""
+      const subject = stanza.getChildText("subject") || from
+
+      let chat = this.users.find((user) => user.jid === from)
+
+      if (!chat) {
+        chat = new User(from)
+        chat.subject = subject
+        this.users.push(chat)
+      }
+
+      // Evitar agregar mensajes duplicados
+      const existingMessage = chat.messages.find(
+        (msg) => msg.message === message && msg.from === stanza.attrs.from
+      )
+
+      if (!existingMessage && message) {
+        chat.messages.push({
+          message,
+          from: stanza.attrs.from,
+        })
+        console.log("Updated users with group chat messages:", this.users)
+        this.notifyUserUpdate(from)
+      }
+    }
+
+    const invite = stanza
+      .getChild("x", "http://jabber.org/protocol/muc#user")
+      ?.getChild("invite")
+    if (invite) {
+      const roomJid = stanza.attrs.from
+      const inviterJid = invite.attrs.from
+
+      this.notifications.push({
+        type: "groupchat-invite",
+        from: roomJid,
+        inviter: inviterJid,
+        subject: stanza.getChildText("subject") || "No Subject",
+        message: `${inviterJid} te ha invitado al grupo ${roomJid}`,
+      })
+
+      this.notifyNotificationChange()
+    }
   }
 }
 

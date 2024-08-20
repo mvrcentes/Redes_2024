@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button"
 import { UserRound } from "lucide-react"
 import classNames from "classnames"
 
-const Conversation = ({ active, onClick, user }) => {
-  console.log(user.messages)
+const Conversation = ({ active, onClick, title, lastMessage }) => {
+  const messagePreview = lastMessage ? lastMessage.message : "No messages"
+
   return (
     <Button
       className={classNames({
@@ -16,9 +17,9 @@ const Conversation = ({ active, onClick, user }) => {
         <UserRound color="#898787" height={48} width={48} />
       </div>
       <div className="min-h-[48px] flex flex-col justify-between items-start overflow-hidden">
-        <p className="text-md text-black">{user.jid.split("@")[0]}</p>
+        <p className="text-md text-black">{title}</p>
         <p className="text-xs text-gray-400 w-full truncate ">
-          {user.messages[user.messages.length - 1]?.message}
+          {messagePreview}
         </p>
       </div>
     </Button>

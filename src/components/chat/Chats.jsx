@@ -10,25 +10,29 @@ import SendMessage from "./SendMessage"
 const Chats = () => {
   const { xmppClientProvider } = useContext(XMPPContext)
   const [conversations, setConversations] = useState({})
-  const [activeJid, setActiveJid] = useState(null)
+  const [activeId, setActiveId] = useState(null)
 
-  // Función para manejar nuevas stanzas
   const handleStanza = useCallback((stanza) => {
     if (stanza.is("message")) {
-      const from = stanza.attrs.from
-      const message = stanza.getChildText("body")
+      const type = stanza.attrs.type
+      const from = stanza.attrs.from.split("/")[0] // JID base sin recurso
+      const message = stanza.getChildText("body") || ""
+      const subject = stanza.getChildText("subject") || from // Usar el subject o el JID
+
       setConversations((prev) => {
         const newConversations = { ...prev }
-        if (!newConversations[from]) {
-          newConversations[from] = []
+        const key = type === "groupchat" ? subject : from
+
+        if (!newConversations[key]) {
+          newConversations[key] = []
         }
-        newConversations[from].push(message)
+        newConversations[key].push({ message, from })
+
         return newConversations
       })
     }
   }, [])
 
-  // Función para inicializar el cliente y obtener conversaciones
   const fetchConversations = useCallback(async () => {
     if (
       xmppClientProvider &&
@@ -38,25 +42,19 @@ const Chats = () => {
     }
   }, [xmppClientProvider, handleStanza])
 
-  // Manejar actualización de mensajes
   const handleMessagesUpdate = (updatedMessages) => {
     setConversations((prev) => ({
       ...prev,
-      [activeJid]: updatedMessages,
+      [activeId]: updatedMessages,
     }))
   }
 
-  // Efecto para inicializar el cliente XMPP y obtener conversaciones
   useEffect(() => {
     if (xmppClientProvider) {
-      console.log("xmppClientProvider:", xmppClientProvider)
       fetchConversations()
       xmppClientProvider.getConversations()
-    } else {
-      console.log("XMPP Client not initialized")
     }
 
-    // Cleanup function to remove event listener
     return () => {
       if (xmppClientProvider && xmppClientProvider.xmppClient) {
         xmppClientProvider.xmppClient.off("stanza", handleStanza)
@@ -74,30 +72,25 @@ const Chats = () => {
               <h2 className="text-xl font-bold">Active Chats</h2>
               <SendMessage />
             </div>
-            {xmppClientProvider &&
-              xmppClientProvider.users.map((user, index) => {
-                return (
-                  <Conversation
-                    key={index}
-                    user={user}
-                    active={user.jid === activeJid}
-                    onClick={() => setActiveJid(user.jid)} // Cambia el estado de la conversación activa
-                  />
-                )
-              })}
+            {Object.keys(conversations).map((id, index) => (
+              <Conversation
+                key={index}
+                title={id} // Pasamos el subject o JID como título
+                active={id === activeId}
+                onClick={() => setActiveId(id)} // Cambia el estado de la conversación activa
+                lastMessage={conversations[id][conversations[id].length - 1]} // Último mensaje
+              />
+            ))}
           </div>
 
-          {
-            // Si activeJid es diferente de null, se muestra el componente ChatView
-            activeJid && xmppClientProvider && (
-              <ChatView
-                title={activeJid}
-                client={xmppClientProvider}
-                
-                onMessagesUpdate={handleMessagesUpdate}
-              />
-            )
-          }
+          {activeId && xmppClientProvider && (
+            <ChatView
+              title={activeId} // Aquí se mostrará el subject o JID como título
+              client={xmppClientProvider}
+              messages={conversations[activeId]} // Pasar mensajes actuales
+              onMessagesUpdate={handleMessagesUpdate}
+            />
+          )}
         </div>
       </div>
     </div>

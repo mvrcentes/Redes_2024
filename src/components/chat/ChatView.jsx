@@ -1,56 +1,37 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { Input } from "@/components/ui/input"
-import classNames from "classnames"
-import Image from "next/image"
 import { Send } from "lucide-react"
 import ProfileInformation from "./ProfileInformation"
-import InputFileImage from "../reusable/InputFileImage"
 import ChatMessage from "./ChatMessage"
 
-const ChatView = ({ title, client, onMessagesUpdate }) => {
+const ChatView = ({ title, client, messages = [], onMessagesUpdate }) => {
   const [messageData, setMessageData] = useState("")
-  const [messages, setMessages] = useState([])
-  const [selectedFile, setSelectedFile] = useState(null)
 
+  // Función para enviar mensajes
   const sendMessage = useCallback(async () => {
-    let messageToSend = messageData
+    let messageToSend = messageData.trim()
 
-    // if (selectedFile) {
-    //   try {
-    //     const fileUrl = await client.uploadFileToServer(selectedFile)
-    //     messageToSend = fileUrl
-    //     setMessages((prevMessages) => [
-    //       ...prevMessages,
-    //       { message: fileUrl, from: client.xmppClient.jid.getLocal() },
-    //     ])
-    //   } catch (error) {
-    //     console.error("Failed to upload file:", error)
-    //     return
-    //   }
-    // }
+    if (messageToSend !== "") {
+      // Determina si el mensaje es para un grupo o un chat individual
+      const isGroupChat = title.includes("@muc.") // Detecta si el JID es de un grupo basado en el sufijo típico de MUC
 
-    if (messageToSend.trim() !== "") {
-      client.sendMessage(title.split("/")[0], messageToSend)
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { message: messageToSend, from: client.xmppClient.jid.getLocal() },
-      ])
+      // Enviar el mensaje usando la función del cliente XMPP
+      await client.sendMessage(title.split("/")[0], messageToSend, isGroupChat)
+
+      const newMessage = {
+        message: messageToSend,
+        from: client.xmppClient.jid.toString(),
+      }
+
+      // Actualiza los mensajes en el estado
+      onMessagesUpdate([...messages, newMessage])
+
+      // Limpiar el input
+      setMessageData("")
     }
+  }, [client, title, messageData, messages, onMessagesUpdate])
 
-    setMessageData("")
-    setSelectedFile(null)
-
-    if (onMessagesUpdate) {
-      onMessagesUpdate([
-        ...messages,
-        {
-          message: messageToSend,
-          from: client.xmppClient.jid.getLocal(),
-        },
-      ])
-    }
-  }, [client, title, messageData, messages, selectedFile, onMessagesUpdate])
-
+  // Función para manejar la tecla Enter para enviar el mensaje
   const handleKeyDown = useCallback(
     (event) => {
       if (event.key === "Enter") {
@@ -60,22 +41,11 @@ const ChatView = ({ title, client, onMessagesUpdate }) => {
     [sendMessage]
   )
 
-  const user = useMemo(
-    () => client.users.find((user) => user.jid === title),
-    [title, client.users]
-  )
-
-  useEffect(() => {
-    if (user) {
-      setMessages(user.messages)
-    }
-  }, [user])
-
   return (
     <div className="flex flex-col w-full ml-8">
       <div className="flex w-full">
-        <p className="text-3xl">{title.split("/")[0]}</p>
-        <ProfileInformation className="ml-auto" user={user} />
+        <p className="text-3xl">{title}</p>
+        <ProfileInformation className="ml-auto" user={{ jid: title }} />
       </div>
 
       <div className="flex flex-col gap-2 mt-auto mb-4 overflow-auto">
@@ -84,21 +54,12 @@ const ChatView = ({ title, client, onMessagesUpdate }) => {
             key={index}
             message={message.message}
             from={message.from}
-            right={
-              message.from.split("@")[0] === client.xmppClient.jid.getLocal()
-            }
+            right={message.from === client.xmppClient.jid.toString()}
           />
         ))}
       </div>
 
-      {selectedFile && (
-        <div className="flex items-center gap-2 p-2 border border-gray-300 rounded-md mb-2">
-          <span className="text-sm text-gray-500">{selectedFile.name}</span>
-        </div>
-      )}
-
       <div className="flex flex-row bg-[#eeeef8] p-2 items-center">
-        <InputFileImage onChange={setSelectedFile} />
         <Input
           placeholder="Type a message"
           onChange={(e) => setMessageData(e.target.value)}

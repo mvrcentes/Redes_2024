@@ -35,7 +35,7 @@ const NotificationCard = ({
           <div className="w-full">
             <p className="font-bold">{notification.from}</p>
             <div className="flex flex-row items-center">
-              <p className="text-[10px]">wants to add you as a contact. </p>
+              <p className="text-[10px]">wants to add you as a contact.</p>
               <div className="ml-auto flex gap-1">
                 <Button
                   className="text-white text-[10px] px-2 py-0 p-0 rounded bg-blue-500 w-14 h-6"
@@ -59,6 +59,47 @@ const NotificationCard = ({
           <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
           <div className="w-full">
             <p className="font-bold">{notification.from}</p>
+            <p className="text-[10px]">{notification.message}</p>
+          </div>
+        </div>
+      )
+    case "groupchat-invite":
+      return (
+        <div className={`flex items-center gap-2 ${cardClassName}`}>
+          <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+          <div className="w-full">
+            <p className="font-bold">{notification.inviter}</p>
+            <div className="flex flex-row items-center">
+              <p className="text-[10px]">
+                te ha invitado al grupo "{notification.subject}"
+              </p>
+              <div className="ml-auto flex gap-1">
+                <Button
+                  className="text-white text-[10px] px-2 py-0 p-0 rounded bg-blue-500 w-14 h-6"
+                  onClick={() =>
+                    onAccept(notification.from, notification.inviter)
+                  }>
+                  Accept
+                </Button>
+                <Button
+                  className="text-white text-[10px] px-2 py-1 rounded w-14 h-6"
+                  onClick={() =>
+                    onReject(notification.from, notification.inviter)
+                  }>
+                  Reject
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+
+    case "groupchat-message":
+      return (
+        <div className={`flex items-center gap-2 ${cardClassName}`}>
+          <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+          <div className="w-full">
+            <p className="font-bold">{notification.subject}</p>
             <p className="text-[10px]">{notification.message}</p>
           </div>
         </div>
@@ -114,17 +155,49 @@ const Notifications = () => {
     }
   }, [xmppClientProvider])
 
-  const handleAccept = (jid) => {
+  const handleAccept = (jid, inviterJid = null) => {
     if (xmppClientProvider) {
-      xmppClientProvider.acceptContactRequest(jid)
-      setNotifications(xmppClientProvider.notifications)
+      const notification = notifications.find(
+        (n) => n.from === jid && n.inviter === inviterJid
+      )
+
+      if (notification) {
+        if (notification.type === "subscribe") {
+          xmppClientProvider.acceptContactRequest(jid)
+        } else if (notification.type === "groupchat-invite") {
+          xmppClientProvider.acceptGroupChatInvite(jid, inviterJid)
+        }
+
+        // Filtrar las notificaciones eliminadas
+        setNotifications((prevNotifications) =>
+          prevNotifications.filter(
+            (n) => !(n.from === jid && n.inviter === inviterJid)
+          )
+        )
+      }
     }
   }
 
-  const handleReject = (jid) => {
+  const handleReject = (jid, inviterJid = null) => {
     if (xmppClientProvider) {
-      xmppClientProvider.rejectContactRequest(jid)
-      setNotifications(xmppClientProvider.notifications)
+      const notification = notifications.find(
+        (n) => n.from === jid && n.inviter === inviterJid
+      )
+
+      if (notification) {
+        if (notification.type === "subscribe") {
+          xmppClientProvider.rejectContactRequest(jid)
+        } else if (notification.type === "groupchat-invite") {
+          xmppClientProvider.rejectGroupChatInvite(jid, inviterJid)
+        }
+
+        // Filtrar las notificaciones eliminadas
+        setNotifications((prevNotifications) =>
+          prevNotifications.filter(
+            (n) => !(n.from === jid && n.inviter === inviterJid)
+          )
+        )
+      }
     }
   }
 
@@ -147,9 +220,7 @@ const Notifications = () => {
             <p className="text-[10px]">Notifications</p>
           </div>
           {unreadCount > 0 && (
-            <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-              
-            </span>
+            <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center"></span>
           )}
         </Button>
       </SheetTrigger>
