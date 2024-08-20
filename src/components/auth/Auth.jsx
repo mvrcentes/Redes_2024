@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useContext, useEffect } from "react"
+import React, { useState, useContext } from "react"
 import { XMPPContext } from "@/context/xmppContext"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -17,14 +17,13 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
+
   const form = useForm({
     resolver: zodResolver(registerFormSchema),
     defaultValues: {
       jid: "ram21032",
       password: "ram21032",
-      // websocket: "ws://alumchat.lol:7070/ws/",
       websocket: "wss://tigase.im:5291/xmpp-websocket",
-
     },
   })
 
@@ -32,25 +31,40 @@ const Auth = () => {
     setIsLoading(true)
 
     try {
+      // Establecer las credenciales antes de intentar conectar
       setCredentials({
         service: data.websocket,
         username: data.jid,
         password: data.password,
       })
 
-      // Notificar al usuario
-      toast({
-        title: "Connected",
-        description: "Successfully connected to XMPP server.",
-      })
-      router.push("/chat")
+      // Espera un tiempo para asegurar que la inicialización se complete
+      setTimeout(async () => {
+        if (
+          xmppClientProvider &&
+          xmppClientProvider.xmppClient.status === "online"
+        ) {
+          // Notificar al usuario
+          toast({
+            title: "Connected",
+            description: "Successfully connected to XMPP server.",
+          })
+          router.push("/chat")
+        } else {
+          toast({
+            title: "Connection Error",
+            description:
+              "Failed to connect to XMPP server. Please check your credentials and try again.",
+          })
+        }
+        setIsLoading(false)
+      }, 1000) // Ajusta el tiempo de espera según sea necesario
     } catch (error) {
       console.error("Error connecting:", error)
       toast({
         title: "Connection Error",
         description: "Failed to connect to XMPP server.",
       })
-    } finally {
       setIsLoading(false)
     }
   }

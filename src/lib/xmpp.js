@@ -1,5 +1,5 @@
 import { client, xml } from "@xmpp/client"
-import { setCookie, destroyCookie } from "nookies"
+import { setCookie, destroyCookie, parseCookies } from "nookies"
 import axios from "axios"
 import User from "./User"
 
@@ -19,6 +19,18 @@ class XMPPCLient {
   }
 
   async initialize() {
+    const cookies = parseCookies()
+    if (!this.service || !this.username || !this.password) {
+      this.service = cookies.service || this.service
+      this.username = cookies.username || this.username
+      this.password = cookies.password || this.password
+    }
+
+    if (!this.service || !this.username || !this.password) {
+      console.error("No credentials provided and none found in cookies.")
+      return
+    }
+
     if (this.xmppClient) {
       await this.xmppClient.stop().catch(console.error)
     }
@@ -39,13 +51,24 @@ class XMPPCLient {
         maxAge: 30 * 24 * 60 * 60,
         path: "/",
       })
+      setCookie(null, "jid", this.username, {
+        maxAge: 30 * 24 * 60 * 60,
+        path: "/",
+      })
+      setCookie(null, "password", this.password, {
+        maxAge: 30 * 24 * 60 * 60,
+        path: "/",
+      })
+      setCookie(null, "service", this.service, {
+        maxAge: 30 * 24 * 60 * 60,
+        path: "/",
+      })
 
       await this.handlePresenceUpdates()
 
-      // Agregar listener solo si no está agregado
       if (!this.isStanzaListenerAdded) {
         this.xmppClient.on("stanza", (stanza) => this.handleStanza(stanza))
-        this.isStanzaListenerAdded = true // Marcar que el listener ha sido agregado
+        this.isStanzaListenerAdded = true
       }
 
       await this.xmppClient.send(xml("presence"))
@@ -599,6 +622,17 @@ class XMPPCLient {
       })
 
       this.notifyNotificationChange()
+    }
+  }
+
+  async logout() {
+    if (this.xmppClient) {
+      await this.xmppClient.stop()
+      destroyCookie(null, "token")
+      destroyCookie(null, "jid")
+      destroyCookie(null, "password")
+      destroyCookie(null, "service")
+      console.log("Logged out and cookies removed")
     }
   }
 }

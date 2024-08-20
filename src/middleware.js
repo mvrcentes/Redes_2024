@@ -2,15 +2,17 @@
 import { NextResponse } from "next/server"
 
 export function middleware(request) {
-  const token = request.cookies.get("token") 
+  const jid = request.cookies.get("jid")
+  const password = request.cookies.get("password")
+  const service = request.cookies.get("service")
 
-  if (!token) {
-    return NextResponse.redirect(new URL("/auth", request.url)) // Redirige si no hay token
+  if (!jid || !password || !service) {
+    return NextResponse.redirect(new URL("/auth", request.url))
   }
 
-  return NextResponse.next() // Permite el acceso si hay token
+  return NextResponse.next()
 }
 
 export const config = {
-  matcher: ["/chat", "/"], // Aplica el middleware a las rutas protegidas
+  matcher: ["/", "/chat"],
 }
