@@ -1,48 +1,63 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react"
 import { Input } from "@/components/ui/input"
 import classNames from "classnames"
-
-const ChatMessage = ({ message, from, right }) => {
-  return (
-    <div
-      className={classNames({
-        "flex flex-row gap-2": true,
-        "self-end": right,
-      })}>
-      <div className="w-8 h-8 bg-gray-400 rounded-sm self-end text-center uppercase p-1">
-        {from[0]}
-      </div>
-      <div className="p-2 bg-[#eeeef8] rounded-md">
-        <p>{message}</p>
-      </div>
-    </div>
-  )
-}
+import Image from "next/image"
+import { Send } from "lucide-react"
+import ProfileInformation from "./ProfileInformation"
+import InputFileImage from "../reusable/InputFileImage"
+import ChatMessage from "./ChatMessage"
 
 const ChatView = ({ title, client, onMessagesUpdate }) => {
   const [messageData, setMessageData] = useState("")
-  const [messages, setMessages] = useState([]) // Nuevo estado para almacenar los mensajes
+  const [messages, setMessages] = useState([])
+  const [selectedFile, setSelectedFile] = useState(null)
 
-  // Manejar el envío de mensajes
+  const sendMessage = useCallback(async () => {
+    let messageToSend = messageData
+
+    // if (selectedFile) {
+    //   try {
+    //     const fileUrl = await client.uploadFileToServer(selectedFile)
+    //     messageToSend = fileUrl
+    //     setMessages((prevMessages) => [
+    //       ...prevMessages,
+    //       { message: fileUrl, from: client.xmppClient.jid.getLocal() },
+    //     ])
+    //   } catch (error) {
+    //     console.error("Failed to upload file:", error)
+    //     return
+    //   }
+    // }
+
+    if (messageToSend.trim() !== "") {
+      client.sendMessage(title.split("/")[0], messageToSend)
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { message: messageToSend, from: client.xmppClient.jid.getLocal() },
+      ])
+    }
+
+    setMessageData("")
+    setSelectedFile(null)
+
+    if (onMessagesUpdate) {
+      onMessagesUpdate([
+        ...messages,
+        {
+          message: messageToSend,
+          from: client.xmppClient.jid.getLocal(),
+        },
+      ])
+    }
+  }, [client, title, messageData, messages, selectedFile, onMessagesUpdate])
+
   const handleKeyDown = useCallback(
     (event) => {
-      if (event.key === "Enter" && messageData.trim() !== "") {
-        client.sendMessage(title.split("/")[0], messageData)
-        setMessageData("")
-        // Añadir el mensaje enviado a la lista de mensajes
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { message: messageData, from: client.xmppClient.jid.getLocal() },
-        ])
-        if (onMessagesUpdate) {
-          onMessagesUpdate([
-            ...messages,
-            { message: messageData, from: client.xmppClient.jid.getLocal() },
-          ])
-        }
+      if (event.key === "Enter") {
+        sendMessage()
       }
     },
-    [client, title, messageData, messages, onMessagesUpdate]
+    [sendMessage]
   )
 
   const user = useMemo(
@@ -50,17 +65,17 @@ const ChatView = ({ title, client, onMessagesUpdate }) => {
     [title, client.users]
   )
 
-  // Efecto para actualizar mensajes al cambiar de usuario o recibir nuevos mensajes
   useEffect(() => {
     if (user) {
       setMessages(user.messages)
     }
-  }, [user, onMessagesUpdate])
+  }, [user])
 
   return (
     <div className="flex flex-col w-full ml-8">
-      <div>
+      <div className="flex w-full">
         <p className="text-3xl">{title.split("/")[0]}</p>
+        <ProfileInformation className="ml-auto" user={user} />
       </div>
 
       <div className="flex flex-col gap-2 mt-auto mb-4 overflow-auto">
@@ -76,12 +91,25 @@ const ChatView = ({ title, client, onMessagesUpdate }) => {
         ))}
       </div>
 
-      <div>
+      {selectedFile && (
+        <div className="flex items-center gap-2 p-2 border border-gray-300 rounded-md mb-2">
+          <span className="text-sm text-gray-500">{selectedFile.name}</span>
+        </div>
+      )}
+
+      <div className="flex flex-row bg-[#eeeef8] p-2 items-center">
+        <InputFileImage onChange={setSelectedFile} />
         <Input
           placeholder="Type a message"
           onChange={(e) => setMessageData(e.target.value)}
           value={messageData}
           onKeyDown={handleKeyDown}
+          className="bg-transparent border-none focus-visible:border-transparent focus-visible:ring-0 flex-grow"
+        />
+        <Send
+          className="mr-2 cursor-pointer"
+          color="#898787"
+          onClick={sendMessage}
         />
       </div>
     </div>
