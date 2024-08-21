@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useContext } from "react"
+import React, { useState, useContext, useEffect } from "react"
 import { XMPPContext } from "@/context/xmppContext"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -37,28 +37,6 @@ const Auth = () => {
         username: data.jid,
         password: data.password,
       })
-
-      // Espera un tiempo para asegurar que la inicialización se complete
-      setTimeout(async () => {
-        if (
-          xmppClientProvider &&
-          xmppClientProvider.xmppClient.status === "online"
-        ) {
-          // Notificar al usuario
-          toast({
-            title: "Connected",
-            description: "Successfully connected to XMPP server.",
-          })
-          router.push("/chat")
-        } else {
-          toast({
-            title: "Connection Error",
-            description:
-              "Failed to connect to XMPP server. Please check your credentials and try again.",
-          })
-        }
-        setIsLoading(false)
-      }, 1000) // Ajusta el tiempo de espera según sea necesario
     } catch (error) {
       console.error("Error connecting:", error)
       toast({
@@ -68,6 +46,12 @@ const Auth = () => {
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (xmppClientProvider?.xmppClient.status === "online") {
+      router.push("/chat")
+    }
+  }, [xmppClientProvider])
 
   return (
     <Form {...form}>
