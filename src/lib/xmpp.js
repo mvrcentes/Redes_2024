@@ -635,6 +635,55 @@ class XMPPCLient {
       console.log("Logged out and cookies removed")
     }
   }
+
+  async register(service, username, password) {
+    const registrationClient = client({
+      service: service,
+    })
+
+    return new Promise((resolve, reject) => {
+      registrationClient.on("online", async () => {
+        try {
+          const iq = xml(
+            "iq",
+            { type: "set", id: "register_1" },
+            xml("query", { xmlns: "jabber:iq:register" }, [
+              xml("username", {}, username),
+              xml("password", {}, password),
+            ])
+          )
+
+          registrationClient.send(iq)
+
+          registrationClient.on("stanza", (stanza) => {
+            if (stanza.is("iq") && stanza.attrs.type === "result") {
+              console.log("Registration successful")
+              resolve(true)
+              registrationClient.stop()
+            } else if (stanza.is("iq") && stanza.attrs.type === "error") {
+              console.error("Registration failed", stanza)
+              reject(new Error("Registration failed"))
+              registrationClient.stop()
+            }
+          })
+        } catch (error) {
+          console.error("Error during registration:", error)
+          reject(error)
+          registrationClient.stop()
+        }
+      })
+
+      registrationClient.on("error", (error) => {
+        console.error("Error with XMPP client during registration:", error)
+        reject(error)
+      })
+
+      registrationClient.start().catch((error) => {
+        console.error("Failed to start registration client:", error)
+        reject(error)
+      })
+    })
+  }
 }
 
 export default XMPPCLient
