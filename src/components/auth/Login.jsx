@@ -12,7 +12,7 @@ import { registerFormSchema } from "@/lib/validations"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
 
-const Login = () => {
+const Login = ({ registerValues }) => {
   const { setCredentials, xmppClientProvider } = useContext(XMPPContext)
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
@@ -21,8 +21,8 @@ const Login = () => {
   const form = useForm({
     resolver: zodResolver(registerFormSchema),
     defaultValues: {
-      jid: "ram21032",
-      password: "ram21032",
+      jid: registerValues ? registerValues.jid : "ram21032",
+      password: registerValues ? registerValues.password : "ram21032",
       // websocket: "wss://tigase.im:5291/xmpp-websocket",
       websocket: "ws://alumchat.lol:7070/ws/",
     },

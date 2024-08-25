@@ -14,7 +14,7 @@ const registerFormSchema = z.object({
   websocket: z.string().url("Invalid websocket URL"),
 })
 
-const Register = () => {
+const Register = ({ handleChangeTab, setRegisterValues }) => {
   const [clientInstance, setClientInstance] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
@@ -77,8 +77,18 @@ const Register = () => {
       )
 
       clientInstance.send(iq)
+      toast({
+        title: "Registration",
+        description: "Registration successful.",
+      })
+      setRegisterValues(form.getValues())
+      handleChangeTab("login")
     } catch (error) {
       console.error("Registration error:", error)
+      toast({
+        title: "Registration Error",
+        description: "Failed to register",
+      })
     } finally {
       setIsLoading(false)
     }
