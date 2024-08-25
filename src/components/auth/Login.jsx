@@ -23,7 +23,8 @@ const Login = () => {
     defaultValues: {
       jid: "ram21032",
       password: "ram21032",
-      websocket: "wss://tigase.im:5291/xmpp-websocket",
+      // websocket: "wss://tigase.im:5291/xmpp-websocket",
+      websocket: "ws://alumchat.lol:7070/ws/",
     },
   })
 

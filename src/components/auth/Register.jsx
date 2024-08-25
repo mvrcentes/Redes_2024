@@ -1,9 +1,8 @@
-import React, { useState, useContext } from "react"
+import React, { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { useRouter } from "next/navigation"
-import { XMPPClient } from "@/lib/xmpp" // Importa tu clase XMPPClient directamente
+import { xml, client } from "@xmpp/client"
 import { Form } from "@/components/ui/form"
 import CustomFormField from "../reusable/CustomFormField"
 import { SubmitButton } from "../reusable/SubmitButton"
@@ -16,43 +15,70 @@ const registerFormSchema = z.object({
 })
 
 const Register = () => {
+  const [clientInstance, setClientInstance] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
   const { toast } = useToast()
 
   const form = useForm({
     resolver: zodResolver(registerFormSchema),
     defaultValues: {
-      jid: "",
-      password: "",
-      websocket: "wss://tigase.im:5291/xmpp-websocket",
+      jid: "cen21032",
+      password: "cen21032",
+      websocket: "ws://alumchat.lol:7070/ws/",
     },
   })
 
-  const onSubmit = async (data) => {
+  const initialize = async () => {
+    const newClient = client({
+      service: "ws://alumchat.lol:7070/ws/",
+      domain: "alumchat.lol",
+      username: "ram21032",
+      password: "ram21032",
+    })
+
+    newClient.on("online", () => {
+      console.log("Client is online")
+      setClientInstance(newClient)
+    })
+
+    newClient.on("error", (err) => {
+      console.error("Client error:", err)
+    })
+
+    newClient.start()
+  }
+
+  useEffect(() => {
+    initialize()
+
+    if (clientInstance) {
+      console.log("first")
+    }
+  }, [])
+
+  const register = async () => {
     setIsLoading(true)
+    if (!clientInstance) {
+      console.log("sin cliente")
+      return
+    }
 
     try {
-      // Crear una nueva instancia de XMPPClient para manejar el registro
-      const tempXmppClient = new XMPPClient(
-        data.websocket,
-        data.jid,
-        data.password
+      console.log(form.getValues("jid"))
+      console.log(form.getValues("password"))
+
+      const iq = xml(
+        "iq",
+        { type: "set", id: "register_1" },
+        xml("query", { xmlns: "jabber:iq:register" }, [
+          xml("username", {}, form.getValues("jid")),
+          xml("password", {}, form.getValues("password")),
+        ])
       )
 
-      await tempXmppClient.register(data.websocket, data.jid, data.password)
-
-      toast({
-        title: "Registration Successful",
-        description: "You have been successfully registered. Please log in.",
-      })
-      router.push("/") // Redirige al login después del registro exitoso
+      clientInstance.send(iq)
     } catch (error) {
-      console.error("Error registering:", error)
-      toast({
-        title: "Registration Error",
-        description: "Failed to register. Please try again.",
-      })
+      console.error("Registration error:", error)
     } finally {
       setIsLoading(false)
     }
@@ -60,7 +86,7 @@ const Register = () => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(register)} className="space-y-6">
         <CustomFormField
           control={form.control}
           fieldType={"input"}

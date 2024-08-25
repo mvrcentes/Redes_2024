@@ -636,52 +636,46 @@ class XMPPCLient {
     }
   }
 
-  async register(service, username, password) {
-    const registrationClient = client({
-      service: service,
-    })
+  async deleteAccount() {
+    if (!this.xmppClient) {
+      console.error("XMPP client not initialized")
+      return
+    }
+
+    // Verificar si el cliente está conectado y listo
+    if (this.xmppClient.status !== "online") {
+      console.error("Client is not online")
+      return
+    }
 
     return new Promise((resolve, reject) => {
-      registrationClient.on("online", async () => {
-        try {
-          const iq = xml(
-            "iq",
-            { type: "set", id: "register_1" },
-            xml("query", { xmlns: "jabber:iq:register" }, [
-              xml("username", {}, username),
-              xml("password", {}, password),
-            ])
-          )
+      try {
+        const iq = xml(
+          "iq",
+          { type: "set", id: "delete_account" },
+          xml("query", { xmlns: "jabber:iq:register" }, xml("remove"))
+        )
 
-          registrationClient.send(iq)
+        this.xmppClient.send(iq)
 
-          registrationClient.on("stanza", (stanza) => {
-            if (stanza.is("iq") && stanza.attrs.type === "result") {
-              console.log("Registration successful")
-              resolve(true)
-              registrationClient.stop()
-            } else if (stanza.is("iq") && stanza.attrs.type === "error") {
-              console.error("Registration failed", stanza)
-              reject(new Error("Registration failed"))
-              registrationClient.stop()
-            }
-          })
-        } catch (error) {
-          console.error("Error during registration:", error)
-          reject(error)
-          registrationClient.stop()
-        }
-      })
+        destroyCookie(null, "token")
+        destroyCookie(null, "jid")
+        destroyCookie(null, "password")
+        destroyCookie(null, "service")
 
-      registrationClient.on("error", (error) => {
-        console.error("Error with XMPP client during registration:", error)
+        this.xmppClient.on("stanza", (stanza) => {
+          if (stanza.is("iq") && stanza.attrs.type === "result") {
+            console.log("Account deletion successful")
+            resolve("Account deletion successful")
+          } else if (stanza.is("iq") && stanza.attrs.type === "error") {
+            console.error("Account deletion failed", stanza)
+            reject(new Error("Account deletion failed"))
+          }
+        })
+      } catch (error) {
+        console.error("Failed to delete account:", error)
         reject(error)
-      })
-
-      registrationClient.start().catch((error) => {
-        console.error("Failed to start registration client:", error)
-        reject(error)
-      })
+      }
     })
   }
 }

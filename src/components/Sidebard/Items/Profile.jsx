@@ -17,8 +17,18 @@ import { Label } from "@/components/ui/label"
 import { UserRound } from "lucide-react"
 import { XMPPContext } from "@/context/xmppContext"
 import Presence from "./ProfileItems/Presence"
+import { useRouter } from "next/navigation"
 
 const Profile = () => {
+  const { xmppClientProvider } = useContext(XMPPContext)
+  const router = useRouter()
+
+  const handleRemoveAccount = async () => {
+    if (xmppClientProvider) {
+      await xmppClientProvider.deleteAccount()
+      router.push("/auth")
+    }
+  }
   return (
     <Sheet>
       <SheetTrigger>
@@ -30,10 +40,13 @@ const Profile = () => {
         </Button>
       </SheetTrigger>
       <SheetContent side="left">
-        <SheetHeader>
+        <SheetHeader className="h-full flex flex-col">
           <SheetTitle>Profile</SheetTitle>
           <SheetDescription>Set your presence status</SheetDescription>
           <Presence />
+          <Button className="mt-auto w-full" onClick={handleRemoveAccount}>
+            Delete account
+          </Button>
         </SheetHeader>
       </SheetContent>
     </Sheet>
