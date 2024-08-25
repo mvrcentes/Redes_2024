@@ -4,6 +4,7 @@ import Notifications from "./Items/Notifications"
 import Profile from "./Items/Profile"
 import Contacts from "./Items/Contacts"
 import LogOut from "./Items/LogOut"
+import Groups from "./Items/Groups"
 
 const Sidebar = () => {
   return (
@@ -12,6 +13,7 @@ const Sidebar = () => {
       <Contacts />
       <AddContact />
       <Notifications />
+      <Groups />
       <LogOut />
     </div>
   )

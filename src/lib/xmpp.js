@@ -682,6 +682,49 @@ class XMPPCLient {
       }
     })
   }
+
+  async getAvailableGroups(serviceJid) {
+    if (!this.xmppClient) {
+      console.error("XMPP client not initialized")
+      return
+    }
+
+    return new Promise((resolve, reject) => {
+      try {
+        const iq = xml(
+          "iq",
+          { type: "get", to: serviceJid, id: "disco_rooms_1" },
+          xml("query", { xmlns: "http://jabber.org/protocol/disco#items" })
+        )
+
+        this.xmppClient.send(iq)
+
+        this.xmppClient.on("stanza", (stanza) => {
+          if (stanza.is("iq") && stanza.attrs.id === "disco_rooms_1") {
+            if (stanza.attrs.type === "result") {
+              const query = stanza.getChild(
+                "query",
+                "http://jabber.org/protocol/disco#items"
+              )
+              if (query) {
+                const items = query.getChildren("item")
+                const rooms = items.map((item) => ({
+                  jid: item.attrs.jid,
+                  name: item.attrs.name,
+                }))
+                resolve(rooms)
+              }
+            } else if (stanza.attrs.type === "error") {
+              reject(new Error("Error fetching rooms"))
+            }
+          }
+        })
+      } catch (error) {
+        console.error("Failed to get available groups:", error)
+        reject(error)
+      }
+    })
+  }
 }
 
 export default XMPPCLient
