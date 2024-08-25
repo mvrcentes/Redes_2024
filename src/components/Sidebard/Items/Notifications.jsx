@@ -1,28 +1,16 @@
-"use client"
-
 import React, { useState, useContext, useEffect } from "react"
 import {
   Sheet,
-  SheetClose,
   SheetContent,
-  SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 import { Bell } from "lucide-react"
 import { XMPPContext } from "@/context/xmppContext"
 
-const NotificationCard = ({
-  notification,
-  xmppClientProvider,
-  onAccept,
-  onReject,
-}) => {
-  // Clase condicional para cambiar el fondo si la notificación es nueva
+const NotificationCard = ({ notification, onAccept, onReject }) => {
   const cardClassName = notification.isNew
     ? "bg-blue-100 p-2 rounded-md"
     : "bg-white p-2 rounded-md"
@@ -53,16 +41,6 @@ const NotificationCard = ({
         </div>
       )
 
-    case "presence":
-      return (
-        <div className={`flex items-center gap-2 ${cardClassName}`}>
-          <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
-          <div className="w-full">
-            <p className="font-bold">{notification.from}</p>
-            <p className="text-[10px]">{notification.message}</p>
-          </div>
-        </div>
-      )
     case "groupchat-invite":
       return (
         <div className={`flex items-center gap-2 ${cardClassName}`}>
@@ -90,17 +68,6 @@ const NotificationCard = ({
                 </Button>
               </div>
             </div>
-          </div>
-        </div>
-      )
-
-    case "groupchat-message":
-      return (
-        <div className={`flex items-center gap-2 ${cardClassName}`}>
-          <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
-          <div className="w-full">
-            <p className="font-bold">{notification.subject}</p>
-            <p className="text-[10px]">{notification.message}</p>
           </div>
         </div>
       )
@@ -139,7 +106,6 @@ const Notifications = () => {
           return [...updatedNotifications.reverse(), ...prevNotifications]
         })
 
-        // Aumentar el contador sólo si hay nuevas notificaciones agregadas
         if (newNotifications.length > 0) {
           setUnreadCount((prevCount) => prevCount + newNotifications.length)
         }
@@ -148,7 +114,7 @@ const Notifications = () => {
       xmppClientProvider.receiveContactRequest()
       xmppClientProvider.onNotificationsChange(handleNotificationChange)
 
-      // Cleanup function
+      // Cleanup
       return () => {
         xmppClientProvider.onNotificationsChange(() => {})
       }
@@ -158,7 +124,8 @@ const Notifications = () => {
   const handleAccept = (jid, inviterJid = null) => {
     if (xmppClientProvider) {
       const notification = notifications.find(
-        (n) => n.from === jid && n.inviter === inviterJid
+        (n) =>
+          n.from === jid && (n.inviter === inviterJid || inviterJid === null)
       )
 
       if (notification) {
@@ -168,11 +135,8 @@ const Notifications = () => {
           xmppClientProvider.acceptGroupChatInvite(jid, inviterJid)
         }
 
-        // Filtrar las notificaciones eliminadas
         setNotifications((prevNotifications) =>
-          prevNotifications.filter(
-            (n) => !(n.from === jid && n.inviter === inviterJid)
-          )
+          prevNotifications.filter((n) => n !== notification)
         )
       }
     }
@@ -181,7 +145,8 @@ const Notifications = () => {
   const handleReject = (jid, inviterJid = null) => {
     if (xmppClientProvider) {
       const notification = notifications.find(
-        (n) => n.from === jid && n.inviter === inviterJid
+        (n) =>
+          n.from === jid && (n.inviter === inviterJid || inviterJid === null)
       )
 
       if (notification) {
@@ -191,11 +156,8 @@ const Notifications = () => {
           xmppClientProvider.rejectGroupChatInvite(jid, inviterJid)
         }
 
-        // Filtrar las notificaciones eliminadas
         setNotifications((prevNotifications) =>
-          prevNotifications.filter(
-            (n) => !(n.from === jid && n.inviter === inviterJid)
-          )
+          prevNotifications.filter((n) => n !== notification)
         )
       }
     }
@@ -205,7 +167,7 @@ const Notifications = () => {
     setNotifications((prevNotifications) =>
       prevNotifications.map((notification) => ({
         ...notification,
-        isNew: false, // Marcar todas las notificaciones como vistas
+        isNew: false,
       }))
     )
     setUnreadCount(0)
@@ -234,7 +196,6 @@ const Notifications = () => {
               <NotificationCard
                 key={index}
                 notification={notification}
-                xmppClientProvider={xmppClientProvider}
                 onAccept={handleAccept}
                 onReject={handleReject}
               />

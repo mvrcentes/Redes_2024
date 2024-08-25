@@ -341,6 +341,8 @@ class XMPPCLient {
   }
 
   async acceptContactRequest(jid) {
+    console.log(jid)
+
     if (this.xmppClient) {
       const subscribedPresence = xml("presence", {
         to: jid,
@@ -365,6 +367,8 @@ class XMPPCLient {
           this.notifications = this.notifications.filter(
             (notification) => notification.from !== jid
           )
+
+          console.log("funcione")
           console.log("Updated Notifications:", this.notifications)
         }
       } catch (error) {
