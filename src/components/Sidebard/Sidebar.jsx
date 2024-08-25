@@ -9,11 +9,22 @@ import Groups from "./Items/Groups"
 const Sidebar = () => {
   return (
     <div className="h-full w-42 p-2 py-4 flex flex-col gap-6 text-[#898787]">
+      {/* User profile section */}
       <Profile />
+
+      {/* Contacts section */}
       <Contacts />
+
+      {/* Add new contact section */}
       <AddContact />
+
+      {/* Notifications section */}
       <Notifications />
+
+      {/* Groups section */}
       <Groups />
+
+      {/* Log out section */}
       <LogOut />
     </div>
   )

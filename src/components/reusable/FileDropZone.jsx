@@ -12,6 +12,7 @@ import * as React from "react"
 import { useDropzone } from "react-dropzone"
 import { twMerge } from "tailwind-merge"
 
+// Define CSS class variants for different dropzone states
 const variants = {
   base: "w-full relative rounded-md p-4 max-w-[calc(100vw-1rem)] flex justify-center items-center flex-col cursor-pointer border border-dashed border-gray-400 dark:border-gray-300 transition-colors duration-200 ease-in-out",
   active: "border-2",
@@ -21,7 +22,7 @@ const variants = {
   reject: "border border-red-700 bg-red-700 bg-opacity-10",
 }
 
-
+// Define error messages for file drop validation
 const ERROR_MESSAGES = {
   fileTooLarge(maxSize) {
     return `The file is too large. Max size is ${formatFileSize(maxSize)}.`
@@ -37,24 +38,28 @@ const ERROR_MESSAGES = {
   },
 }
 
+// MultiFileDropzone component for handling file uploads
 const MultiFileDropzone = React.forwardRef(
   (
     {
-      dropzoneOptions,
-      value,
-      className,
-      disabled,
-      onFilesAdded,
-      onChange,
-      accept,
+      dropzoneOptions, // Options for customizing the dropzone behavior
+      value, // The current list of files
+      className, // Additional CSS classes
+      disabled, // Flag to disable the dropzone
+      onFilesAdded, // Callback when files are added
+      onChange, // Callback when the file list changes
+      accept, // Accepted file types
     },
     ref
   ) => {
     const [customError, setCustomError] = React.useState()
+
+    // Disable the dropzone if the max file limit is reached
     if (dropzoneOptions?.maxFiles && value?.length) {
       disabled = disabled ?? value.length >= dropzoneOptions.maxFiles
     }
-    // dropzone configuration
+
+    // Dropzone configuration using useDropzone hook
     const {
       getRootProps,
       getInputProps,
@@ -68,6 +73,8 @@ const MultiFileDropzone = React.forwardRef(
       onDrop: (acceptedFiles) => {
         const files = acceptedFiles
         setCustomError(undefined)
+
+        // Handle too many files error
         if (
           dropzoneOptions?.maxFiles &&
           (value?.length ?? 0) + files.length > dropzoneOptions.maxFiles
@@ -75,20 +82,22 @@ const MultiFileDropzone = React.forwardRef(
           setCustomError(ERROR_MESSAGES.tooManyFiles(dropzoneOptions.maxFiles))
           return
         }
+
+        // Process accepted files
         if (files) {
-          const addedFiles = files.map<FileState>((file) => ({
+          const addedFiles = files.map((file) => ({
             file,
-            key: Math.random().toString(36).slice(2),
+            key: Math.random().toString(36).slice(2), // Generate a unique key for each file
             progress: "PENDING",
           }))
-          void onFilesAdded?.(addedFiles)
-          void onChange?.([...(value ?? []), ...addedFiles])
+          void onFilesAdded?.(addedFiles) // Trigger the onFilesAdded callback
+          void onChange?.([...(value ?? []), ...addedFiles]) // Update the file list
         }
       },
       ...dropzoneOptions,
     })
 
-    // styling
+    // Combine the base, active, disabled, accept, and reject styles
     const dropZoneClassName = React.useMemo(
       () =>
         twMerge(
@@ -109,7 +118,7 @@ const MultiFileDropzone = React.forwardRef(
       ]
     )
 
-    // error validation messages
+    // Determine the appropriate error message based on file rejection reasons
     const errorMessage = React.useMemo(() => {
       if (fileRejections[0]) {
         const { errors } = fileRejections[0]
@@ -139,7 +148,7 @@ const MultiFileDropzone = React.forwardRef(
               <div className="flex flex-col items-center justify-center text-xs text-gray-400">
                 <UploadCloudIcon className="mb-1 h-7 w-7" />
                 <div className="text-gray-400">
-                  Arrastra y suelta archivos aquí o haz clic para seleccionar
+                  Drag and drop files here or click to select
                 </div>
               </div>
             </div>
@@ -159,10 +168,10 @@ const MultiFileDropzone = React.forwardRef(
                 <FileIcon size="30" className="shrink-0" />
                 <div className="min-w-0 text-sm">
                   <div className="overflow-hidden overflow-ellipsis whitespace-nowrap">
-                    {file.name}
+                    {file.name} {/* File name */}
                   </div>
                   <div className="text-xs text-gray-400 dark:text-gray-400">
-                    {formatFileSize(file.size)}
+                    {formatFileSize(file.size)} {/* File size */}
                   </div>
                 </div>
                 <div className="grow" />

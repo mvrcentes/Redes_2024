@@ -3,22 +3,23 @@ import { setCookie, destroyCookie, parseCookies } from "nookies"
 import axios from "axios"
 import User from "./User"
 
-class XMPPCLient {
+class XMPPClient {
   constructor(service, username, password) {
-    this.service = service
-    this.username = username
-    this.password = password
-    this.xmppClient = null
-    this.contacts = []
-    this.notifications = []
-    this.notificationListeners = []
-    this.users = []
-    this.presenceStatuses = {}
-    this.contacts = []
-    this.isStanzaListenerAdded = false
+    this.service = service // XMPP service URL
+    this.username = username // XMPP username (JID)
+    this.password = password // XMPP password
+    this.xmppClient = null // XMPP client instance
+    this.contacts = [] // List of contacts (roster)
+    this.notifications = [] // List of notifications
+    this.notificationListeners = [] // Listeners for notifications
+    this.users = [] // List of users in conversations or groups
+    this.presenceStatuses = {} // Map of presence statuses
+    this.isStanzaListenerAdded = false // Flag to ensure stanza listener is only added once
   }
 
+  // Initialize the XMPP client
   async initialize() {
+    // Load credentials from cookies if not provided
     const cookies = parseCookies()
     if (!this.service || !this.username || !this.password) {
       this.service = cookies.service || this.service
@@ -26,15 +27,18 @@ class XMPPCLient {
       this.password = cookies.password || this.password
     }
 
+    // Check if credentials are available
     if (!this.service || !this.username || !this.password) {
       console.error("No credentials provided and none found in cookies.")
       return
     }
 
+    // Stop the client if it's already running
     if (this.xmppClient) {
       await this.xmppClient.stop().catch(console.error)
     }
 
+    // Create a new XMPP client instance
     this.xmppClient = client({
       service: this.service,
       resource: "web",
@@ -42,11 +46,13 @@ class XMPPCLient {
       password: this.password,
     })
 
+    // Set up event listeners for the XMPP client
     this.xmppClient.on("error", (err) => console.log(err))
     this.xmppClient.on("offline", () => console.log("offline"))
     this.xmppClient.on("online", async () => {
       const token = "authenticated"
 
+      // Store credentials and session information in cookies
       setCookie(null, "token", token, {
         maxAge: 30 * 24 * 60 * 60,
         path: "/",
@@ -66,14 +72,17 @@ class XMPPCLient {
 
       await this.handlePresenceUpdates()
 
+      // Add stanza listener only once
       if (!this.isStanzaListenerAdded) {
         this.xmppClient.on("stanza", (stanza) => this.handleStanza(stanza))
         this.isStanzaListenerAdded = true
       }
 
+      // Send initial presence to indicate the user is online
       await this.xmppClient.send(xml("presence"))
     })
 
+    // Start the XMPP client
     try {
       await this.xmppClient.start()
       console.log("XMPP Client started")
@@ -82,6 +91,7 @@ class XMPPCLient {
     }
   }
 
+  // Fetch the user's roster (contact list)
   async getRoster() {
     if (!this.xmppClient) {
       console.error("XMPP client not initialized")
@@ -113,7 +123,7 @@ class XMPPCLient {
                 return contact
               })
               resolve(this.contacts)
-              this.notifyContactsUpdate()
+              this.notifyContactsUpdate() // Notify listeners about the updated contacts
             }
           }
         })
@@ -124,12 +134,13 @@ class XMPPCLient {
     })
   }
 
+  // Handle presence updates from other users
   async handlePresenceUpdates() {
     this.xmppClient.on("stanza", (stanza) => {
       console.log(stanza.toString(), `from ${this.xmppClient.jid.getLocal()}`)
       if (stanza.is("presence")) {
         const from = stanza.attrs.from
-        const type = stanza.attrs.type || "available" // Si no hay un tipo, se asume que es "available"
+        const type = stanza.attrs.type || "available" // Assume "available" if no type is provided
         const status = stanza.getChildText("status") || ""
         let show = stanza.getChildText("show") || ""
 
@@ -150,7 +161,7 @@ class XMPPCLient {
           stanza.name === "presence"
         ) {
           console.log(
-            `funciono con la stanza desde ${this.xmppClient.jid.getLocal()}`,
+            `Handled presence stanza from ${this.xmppClient.jid.getLocal()}`,
             stanza.toString()
           )
           show = "available"
@@ -159,7 +170,7 @@ class XMPPCLient {
             type: "presence",
             message: `${from} is online`,
           })
-          this.notifyNotificationChange()
+          this.notifyNotificationChange() // Notify listeners about the new notification
         }
 
         if (type === "unavailable") {
@@ -186,20 +197,20 @@ class XMPPCLient {
         if (contact) {
           contact.status = status
           contact.show = show
-          this.notifyContactsUpdate()
+          this.notifyContactsUpdate() // Notify listeners about the updated contacts
         }
       }
     })
   }
 
-  // Notificar a los listeners que hay una nueva notificación
+  // Notify listeners of a new notification
   notifyNotificationChange() {
     this.notificationListeners.forEach((callback) =>
       callback(this.notifications)
     )
   }
 
-  // Notifica a los listeners que los contactos han sido actualizados
+  // Notify listeners that contacts have been updated
   notifyContactsUpdate() {
     this.notificationListeners.forEach((callback) => callback(this.contacts))
   }
@@ -208,6 +219,7 @@ class XMPPCLient {
     this.notificationListeners.push(callback)
   }
 
+  // Close the XMPP client connection
   async close() {
     if (this.xmppClient) {
       try {
@@ -219,14 +231,16 @@ class XMPPCLient {
     }
   }
 
+  // Log out the user and remove authentication cookies
   async logout() {
     if (this.xmppClient) {
       await this.xmppClient.stop()
-      destroyCookie(null, "authToken") // Elimina la cookie de autenticación
+      destroyCookie(null, "authToken") // Remove authentication cookie
       console.log("Logged out and cookie removed")
     }
   }
 
+  // Fetch and manage group chat conversations
   async getConversations() {
     if (this.xmppClient) {
       try {
@@ -260,6 +274,7 @@ class XMPPCLient {
     }
   }
 
+  // Send a message to a specific user or group chat
   async sendMessage(jid, messageData, isGroupChat = false) {
     if (!this.xmppClient) {
       console.error("XMPP client not initialized")
@@ -296,7 +311,7 @@ class XMPPCLient {
     }
   }
 
-  // Método para notificar que un usuario ha sido actualizado
+  // Notify that a user has been updated
   notifyUserUpdate(jid) {
     const user = this.users.find((user) => user.jid === jid)
     if (user && user.onUpdate) {
@@ -304,6 +319,7 @@ class XMPPCLient {
     }
   }
 
+  // Send a contact request (subscription request)
   async sendContactRequest(jid) {
     if (this.xmppClient) {
       const subscriptionRequest = xml("presence", {
@@ -322,6 +338,7 @@ class XMPPCLient {
     }
   }
 
+  // Receive and handle incoming contact requests
   async receiveContactRequest() {
     if (this.xmppClient) {
       this.xmppClient.on("stanza", (stanza) => {
@@ -336,10 +353,12 @@ class XMPPCLient {
     }
   }
 
+  // Register a callback to listen for notifications
   onNotificationsChange(callback) {
     this.notificationListeners.push(callback)
   }
 
+  // Accept a contact request
   async acceptContactRequest(jid) {
     console.log(jid)
 
@@ -363,13 +382,12 @@ class XMPPCLient {
           await this.xmppClient.send(subscribePresence)
           console.log("Contact subscription confirmed")
 
-          // Eliminar la notificación correspondiente
+          // Remove the corresponding notification
           this.notifications = this.notifications.filter(
             (notification) => notification.from !== jid
           )
 
-          console.log("funcione")
-          console.log("Updated Notifications:", this.notifications)
+          console.log("Notification updated:", this.notifications)
         }
       } catch (error) {
         console.error("Failed to accept contact request:", error)
@@ -377,6 +395,7 @@ class XMPPCLient {
     }
   }
 
+  // Reject a contact request
   async rejectContactRequest(jid) {
     if (this.xmppClient) {
       const unsubscribedPresence = xml("presence", {
@@ -390,11 +409,11 @@ class XMPPCLient {
           await this.xmppClient.send(unsubscribedPresence)
           console.log("Contact request rejected")
 
-          // Eliminar la notificación correspondiente
+          // Remove the corresponding notification
           this.notifications = this.notifications.filter(
             (notification) => notification.from !== jid
           )
-          console.log("Updated Notifications:", this.notifications)
+          console.log("Notification updated:", this.notifications)
         }
       } catch (error) {
         console.error("Failed to reject contact request:", error)
@@ -402,6 +421,7 @@ class XMPPCLient {
     }
   }
 
+  // Set the user's presence status
   async setPresence(presence) {
     if (this.xmppClient) {
       const presenceStanza = xml("presence", {}, xml("status", {}, presence))
@@ -418,6 +438,7 @@ class XMPPCLient {
     }
   }
 
+  // Upload a file to the server
   async uploadFileToServer(file) {
     console.log(file)
     try {
@@ -446,6 +467,7 @@ class XMPPCLient {
     }
   }
 
+  // Remove a contact from the user's roster
   async removeContact(jid) {
     if (!this.xmppClient) {
       console.error("XMPP client not initialized")
@@ -453,7 +475,7 @@ class XMPPCLient {
     }
 
     try {
-      // Crear la solicitud IQ para eliminar el contacto
+      // Create the IQ stanza to remove the contact
       const iq = xml(
         "iq",
         { type: "set", id: "remove_1" },
@@ -464,43 +486,13 @@ class XMPPCLient {
         )
       )
 
-      // Enviar la solicitud al servidor
+      // Send the IQ stanza to the server
       await this.sendIq(iq)
       console.log(`Contact ${jid} removed from roster`)
 
-      // Actualizar la lista de contactos localmente
+      // Update the contact list locally
       this.contacts = this.contacts.filter((contact) => contact.jid !== jid)
-      this.notifyContactsUpdate() // Notificar a los listeners que los contactos han sido actualizados
-    } catch (error) {
-      console.error(`Failed to remove contact ${jid}:`, error)
-    }
-  }
-
-  async removeContact(jid) {
-    if (!this.xmppClient) {
-      console.error("XMPP client not initialized")
-      return
-    }
-
-    try {
-      // Crear la solicitud IQ para eliminar el contacto
-      const iq = xml(
-        "iq",
-        { type: "set", id: "remove_1" },
-        xml(
-          "query",
-          { xmlns: "jabber:iq:roster" },
-          xml("item", { jid: jid, subscription: "remove" })
-        )
-      )
-
-      // Enviar la solicitud al servidor
-      await this.sendIq(iq)
-      console.log(`Contact ${jid} removed from roster`)
-
-      // Actualizar la lista de contactos localmente
-      this.contacts = this.contacts.filter((contact) => contact.jid !== jid)
-      this.notifyContactsUpdate() // Notificar a los listeners que los contactos han sido actualizados
+      this.notifyContactsUpdate() // Notify listeners about the updated contacts
     } catch (error) {
       console.error(`Failed to remove contact ${jid}:`, error)
     }
@@ -519,6 +511,7 @@ class XMPPCLient {
     })
   }
 
+  // Accept a group chat invite
   async acceptGroupChatInvite(roomJid, inviterJid) {
     if (!this.xmppClient) {
       console.error("XMPP client not initialized")
@@ -535,19 +528,20 @@ class XMPPCLient {
       await this.xmppClient.send(presence)
       console.log(`Joined the group chat: ${roomJid}`)
 
-      // Eliminar la notificación correspondiente
+      // Remove the corresponding notification
       this.notifications = this.notifications.filter(
         (notification) =>
           !(
             notification.from === roomJid && notification.inviter === inviterJid
           )
       )
-      this.notifyNotificationChange() // Notificar cambios en las notificaciones
+      this.notifyNotificationChange() // Notify listeners about the updated notifications
     } catch (error) {
       console.error("Failed to accept group chat invite:", error)
     }
   }
 
+  // Reject a group chat invite
   async rejectGroupChatInvite(roomJid, inviterJid) {
     if (!this.xmppClient) {
       console.error("XMPP client not initialized")
@@ -565,20 +559,20 @@ class XMPPCLient {
       await this.xmppClient.send(message)
       console.log(`Declined the group chat invite from ${inviterJid}`)
 
-      // Eliminar la notificación correspondiente
+      // Remove the corresponding notification
       this.notifications = this.notifications.filter(
         (notification) =>
           !(
             notification.from === roomJid && notification.inviter === inviterJid
           )
       )
-      this.notifyNotificationChange() // Notificar cambios en las notificaciones
+      this.notifyNotificationChange() // Notify listeners about the updated notifications
     } catch (error) {
       console.error("Failed to decline group chat invite:", error)
     }
   }
 
-  // Manejar la recepción de invitaciones a chat grupal
+  // Handle incoming stanzas
   handleStanza(stanza) {
     console.log("Incoming stanza:", stanza.toString())
 
@@ -595,7 +589,7 @@ class XMPPCLient {
         this.users.push(chat)
       }
 
-      // Evitar agregar mensajes duplicados
+      // Avoid adding duplicate messages
       const existingMessage = chat.messages.find(
         (msg) => msg.message === message && msg.from === stanza.attrs.from
       )
@@ -622,13 +616,14 @@ class XMPPCLient {
         from: roomJid,
         inviter: inviterJid,
         subject: stanza.getChildText("subject") || "No Subject",
-        message: `${inviterJid} te ha invitado al grupo ${roomJid}`,
+        message: `${inviterJid} invited you to join the group ${roomJid}`,
       })
 
       this.notifyNotificationChange()
     }
   }
 
+  // Log out the user and remove all session cookies
   async logout() {
     if (this.xmppClient) {
       await this.xmppClient.stop()
@@ -640,13 +635,14 @@ class XMPPCLient {
     }
   }
 
+  // Delete the user's account from the XMPP server
   async deleteAccount() {
     if (!this.xmppClient) {
       console.error("XMPP client not initialized")
       return
     }
 
-    // Verificar si el cliente está conectado y listo
+    // Ensure the client is online before attempting account deletion
     if (this.xmppClient.status !== "online") {
       console.error("Client is not online")
       return
@@ -662,6 +658,7 @@ class XMPPCLient {
 
         this.xmppClient.send(iq)
 
+        // Remove all session cookies after account deletion
         destroyCookie(null, "token")
         destroyCookie(null, "jid")
         destroyCookie(null, "password")
@@ -683,6 +680,7 @@ class XMPPCLient {
     })
   }
 
+  // Fetch the list of available groups from the XMPP server
   async getAvailableGroups(serviceJid) {
     if (!this.xmppClient) {
       console.error("XMPP client not initialized")
@@ -727,4 +725,4 @@ class XMPPCLient {
   }
 }
 
-export default XMPPCLient
+export default XMPPClient

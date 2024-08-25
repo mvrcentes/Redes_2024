@@ -20,14 +20,6 @@ import { Textarea } from "@/components/ui/textarea"
 
 import { CalendarIcon } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
-// import {
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from "@/components/ui/select"
-// import { ComboXSelect } from "@/lib/types"
 import {
   Command,
   CommandEmpty,
@@ -38,8 +30,6 @@ import {
 } from "@/components/ui/command"
 import { toast } from "@/components/ui/use-toast"
 import { Check, ChevronsUpDown } from "lucide-react"
-// import { MultiFileDropzone } from "./FileDropZone"
-// import { DropzoneOptions } from "react-dropzone"
 
 const RenderField = ({ field, props }) => {
   const {
@@ -49,7 +39,6 @@ const RenderField = ({ field, props }) => {
     iconAlt,
     placeholder,
     children,
-    // fieldValues,
     form,
     maxFiles,
     acceptedFiles,
@@ -68,10 +57,13 @@ const RenderField = ({ field, props }) => {
       return newFileStates
     })
   }
+
   switch (fieldType) {
+    // Render an input field
     case "input":
       return (
         <div className="flex rounded-md border border-white bg-white">
+          {/* Optional icon displayed before the input field */}
           {iconSrc && (
             <div className="flex items-center justify-center h-12 w-10 bg-white border-r border-white">
               <Image
@@ -86,17 +78,15 @@ const RenderField = ({ field, props }) => {
           <FormControl>
             <Input
               {...field}
-              type={fieldTypeType || "text"}
+              type={fieldTypeType || "text"} // Default to text input if no type is provided
               placeholder={placeholder}
-              // defaultValue={control._defaultValues[field.name]}
               className="w-full shad-input"
-              // onChange={(e) => {
-              //   field.onChange(e.target.value)
-              // }}
             />
           </FormControl>
         </div>
       )
+
+    // Render a number input field
     case "number":
       return (
         <div className="flex rounded-md border border-white bg-white">
@@ -114,44 +104,20 @@ const RenderField = ({ field, props }) => {
           <FormControl>
             <Input
               {...field}
-              type={"number"}
+              type={"number"} // Input type is number
               placeholder={placeholder}
               className="w-full shad-input"
               onChange={(e) => {
-                field.onChange(e.target.value)
+                field.onChange(e.target.value) // Handle input changes
               }}
             />
           </FormControl>
         </div>
       )
-    // TODO: Add support for file type
-    // TODO: review the implementation of the file type
-    // TODO: review if there's a better way to implemnt it
-    // case "file":
-    //   return (
-    //     <div className="flex flex-col items-center">
-    //       <MultiFileDropzone
-    //         value={fileStates}
-    //         dropzoneOptions={{
-    //           maxFiles: maxFiles,
-    //           maxSize: 1024 * 1024 * 1, // 1 MB
-    //         }}
-    //         onChange={(fileStates) => {
-    //           setFileStates(fileStates)
-    //         }}
-    //         onFilesAdded={async (addedFiles) => {
-    //           setFileStates([...fileStates, ...addedFiles])
 
-    //           addedFiles.map((addedFileState) => {
-    //             form.setValue("file", addedFileState.file)
-    //           })
-    //         }}
-    //         accept={acceptedFiles}
-    //       />
-    //     </div>
-    //   )
+    // Render a date picker field
     case "date":
-      const [open, setOpen] = React.useState(false)
+      const [open, setOpen] = React.useState(false) // State to manage the popover open/close status
       return (
         <div className="h-12 flex rounded-md border border-white bg-white">
           <Popover open={open}>
@@ -168,7 +134,7 @@ const RenderField = ({ field, props }) => {
                     console.log(open)
                   }}>
                   {field.value ? (
-                    format(field.value, "PPP", { locale: es })
+                    format(field.value, "PPP", { locale: es }) // Format date using `date-fns`
                   ) : (
                     <span>{placeholder}</span>
                   )}
@@ -181,11 +147,11 @@ const RenderField = ({ field, props }) => {
                 mode="single"
                 selected={field.value}
                 onSelect={(date) => {
-                  field.onChange(date)
-                  setOpen(false)
+                  field.onChange(date) // Update field value with selected date
+                  setOpen(false) // Close the popover
                 }}
-                disabled={(date) =>
-                  date > new Date() || date < new Date("1900-01-01")
+                disabled={
+                  (date) => date > new Date() || date < new Date("1900-01-01") // Disable dates outside of valid range
                 }
                 initialFocus
               />
@@ -193,6 +159,8 @@ const RenderField = ({ field, props }) => {
           </Popover>
         </div>
       )
+
+    // Render a textarea input field
     case "textarea":
       return (
         <FormControl>
@@ -203,70 +171,7 @@ const RenderField = ({ field, props }) => {
           />
         </FormControl>
       )
-    // case FormFieldType.SELECT:
-    //   return (
-    //     <Select onValueChange={field.onChange} defaultValue={field.value}>
-    //       <FormControl className="h-12">
-    //         <SelectTrigger>
-    //           <SelectValue placeholder={placeholder} />
-    //         </SelectTrigger>
-    //       </FormControl>
-    //       <SelectContent>{children}</SelectContent>
-    //     </Select>
-    //   )
-    // case FormFieldType.SELECT_ITEM:
-    //   const [openSelectItem, setOpenSelectItem] = React.useState(false)
-    //   return (
-    //     <Popover open={openSelectItem} onOpenChange={setOpenSelectItem}>
-    //       <PopoverTrigger asChild>
-    //         <FormControl>
-    //           <Button
-    //             variant="outline"
-    //             role="combobox"
-    //             className={cn(
-    //               "w-full h-[48px] justify-between",
-    //               !field.value && "text-muted-foreground"
-    //             )}>
-    //             {field.value
-    //               ? fieldValues!.find(
-    //                   (fieldValue) => fieldValue.value === field.value
-    //                 )?.label
-    //               : placeholder}
-    //             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-    //           </Button>
-    //         </FormControl>
-    //       </PopoverTrigger>
-    //       <PopoverContent className="w-[200px] p-0">
-    //         <Command>
-    //           <CommandInput placeholder="Search language..." />
-    //           <CommandList>
-    //             <CommandEmpty>No language found.</CommandEmpty>
-    //             <CommandGroup>
-    //               {fieldValues!.map((fieldValue) => (
-    //                 <CommandItem
-    //                   value={fieldValue.label}
-    //                   key={fieldValue.value}
-    //                   onSelect={() => {
-    //                     form.setValue("property_identifier", fieldValue.value)
-    //                     setOpenSelectItem(false)
-    //                   }}>
-    //                   <Check
-    //                     className={cn(
-    //                       "mr-2 h-4 w-4",
-    //                       fieldValue.value === field.value
-    //                         ? "opacity-100"
-    //                         : "opacity-0"
-    //                     )}
-    //                   />
-    //                   {fieldValue.label}
-    //                 </CommandItem>
-    //               ))}
-    //             </CommandGroup>
-    //           </CommandList>
-    //         </Command>
-    //       </PopoverContent>
-    //     </Popover>
-    //   )
+
     default:
       break
   }
@@ -281,13 +186,14 @@ const CustomFormField = (props) => {
       name={name}
       render={({ field }) => (
         <FormItem className="flex-1">
+          {/* Render label unless the field type is checkbox */}
           {fieldType !== "checkbox" && label && (
             <FormLabel> {label} </FormLabel>
           )}
-
+          {/* Render the appropriate field based on the field type */}
           <RenderField field={field} props={props} />
-
-          <FormMessage className="shad-error" />
+          <FormMessage className="shad-error" />{" "}
+          {/* Display form error message */}
         </FormItem>
       )}
     />

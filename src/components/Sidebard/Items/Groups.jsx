@@ -15,31 +15,32 @@ import { XMPPContext } from "@/context/xmppContext"
 import { useToast } from "@/components/ui/use-toast"
 
 const Groups = () => {
-  const { xmppClientProvider } = useContext(XMPPContext)
-  const [groups, setGroups] = useState([])
-  const [isLoading, setIsLoading] = useState(false)
-  const { toast } = useToast()
+  const { xmppClientProvider } = useContext(XMPPContext) // Access XMPP client provider from context
+  const [groups, setGroups] = useState([]) // State to store the list of available groups
+  const [isLoading, setIsLoading] = useState(false) // State to manage loading status
+  const { toast } = useToast() // Toast notification for error handling
 
-  const serviceJid = "conference.alumchat.lol" // Reemplaza con el JID del servicio MUC de tu servidor
+  const serviceJid = "conference.alumchat.lol" // Replace with the MUC service JID of your XMPP server
 
+  // Effect to fetch the list of available groups when the component mounts
   useEffect(() => {
     if (xmppClientProvider) {
       const fetchGroups = async () => {
-        setIsLoading(true)
+        setIsLoading(true) // Set loading state to true while fetching groups
         try {
           const availableGroups = await xmppClientProvider.getAvailableGroups(
             serviceJid
-          )
-          setGroups(availableGroups)
+          ) // Fetch the available groups from the XMPP server
+          setGroups(availableGroups) // Update the groups state with the fetched data
         } catch (error) {
           console.error("Failed to fetch groups:", error)
           toast({
             title: "Error fetching groups",
             description: "Could not retrieve the list of groups.",
             status: "error",
-          })
+          }) // Display an error toast if fetching fails
         } finally {
-          setIsLoading(false)
+          setIsLoading(false) // Set loading state to false after the operation completes
         }
       }
 
@@ -59,9 +60,10 @@ const Groups = () => {
       </SheetTrigger>
       <SheetContent side="left">
         <SheetHeader className="h-full flex flex-col">
-          <SheetTitle>Available Groups</SheetTitle>
-          <SheetDescription>Join a group chat</SheetDescription>
-
+          <SheetTitle>Available Groups</SheetTitle> {/* Title of the sheet */}
+          <SheetDescription>Join a group chat</SheetDescription>{" "}
+          {/* Description */}
+          {/* Display loading message or list of groups */}
           {isLoading ? (
             <p>Loading groups...</p>
           ) : (
@@ -69,7 +71,8 @@ const Groups = () => {
               {groups.length > 0 ? (
                 groups.map((group) => (
                   <li key={group.jid} className="my-2">
-                    <p className="font-bold">{group.name || group.jid}</p>
+                    <p className="font-bold">{group.name || group.jid}</p>{" "}
+                    {/* Group name or JID */}
                     <Button
                       variant="outline"
                       size="sm"
@@ -79,6 +82,8 @@ const Groups = () => {
                           null
                         )
                       }>
+                      {" "}
+                      {/* Button to join the group */}
                       Join
                     </Button>
                   </li>
@@ -88,7 +93,7 @@ const Groups = () => {
               )}
             </ul>
           )}
-
+          {/* Button to delete the account (additional functionality) */}
           <Button className="mt-auto w-full" variant="destructive">
             Delete account
           </Button>

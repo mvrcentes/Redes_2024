@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 
-// Función para verificar si es una imagen
+// Function to check if the URL is an image
 const isImageUrl = (url) => {
   return (
     typeof url === "string" &&
@@ -24,7 +24,7 @@ const isImageUrl = (url) => {
   )
 }
 
-// Función para verificar si es un archivo de texto
+// Function to check if the URL is a text file
 const isTextFile = (url) => {
   return (
     typeof url === "string" &&
@@ -32,7 +32,7 @@ const isTextFile = (url) => {
   )
 }
 
-// Función para verificar si es un archivo descargable
+// Function to check if the URL is a downloadable file
 const isDownloadableFile = (url) => {
   return (
     typeof url === "string" &&
@@ -45,10 +45,11 @@ const isDownloadableFile = (url) => {
 }
 
 const ChatMessage = ({ message, from, right }) => {
+  // Function to handle file download
   const handleDownload = (url) => {
     const link = document.createElement("a")
     link.href = url
-    link.download = message.split("/").pop() // Nombre del archivo extraído de la URL
+    link.download = message.split("/").pop() // Extract the file name from the URL
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -57,18 +58,19 @@ const ChatMessage = ({ message, from, right }) => {
   return (
     <div
       className={classNames({
-        "flex flex-row gap-2 w-[50%]": true,
-        "self-end flex-row-reverse": right,
+        "flex flex-row gap-2 w-[50%]": true, // Default styles for the message container
+        "self-end flex-row-reverse": right, // Adjust alignment if the message is from the right side
       })}>
       <div
         className={classNames({
-          "w-8 h-8 bg-gray-400 rounded-sm self-end text-center uppercase p-1": true,
-          "flex-row-reverse": right,
+          "w-8 h-8 bg-gray-400 rounded-sm self-end text-center uppercase p-1": true, // Default styles for the avatar
+          "flex-row-reverse": right, // Adjust alignment for the avatar if the message is from the right side
         })}>
-        {from[0]}
+        {from[0]} {/* Display the first character of the sender's name */}
       </div>
       <div className="p-2 bg-[#eeeef8] rounded-md">
         {isImageUrl(message) ? (
+          // If the message is an image URL, render the image
           <div className="w-full h-full">
             <Image
               src={message}
@@ -81,11 +83,13 @@ const ChatMessage = ({ message, from, right }) => {
             />
           </div>
         ) : isTextFile(message) ? (
+          // If the message is a text file URL, render a preview with a download option
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline" className="flex gap-2 items-center">
                 <FileText />
-                <span>{message.split("/").pop()}</span>
+                <span>{message.split("/").pop()}</span>{" "}
+                {/* Display the file name */}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
@@ -109,14 +113,17 @@ const ChatMessage = ({ message, from, right }) => {
             </DialogContent>
           </Dialog>
         ) : isDownloadableFile(message) ? (
+          // If the message is a downloadable file URL, render a download button
           <Button
             variant="link"
             className="flex gap-2 items-center text-blue-500"
             onClick={() => handleDownload(message)}>
             <ArrowDownToLine />
-            <span>{message.split("/").pop()}</span>
+            <span>{message.split("/").pop()}</span>{" "}
+            {/* Display the file name */}
           </Button>
         ) : (
+          // If the message is plain text, display it directly
           <p className="w-full">{message}</p>
         )}
       </div>

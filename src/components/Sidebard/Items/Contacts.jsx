@@ -11,20 +11,20 @@ import { Button } from "@/components/ui/button"
 import { XMPPContext } from "@/context/xmppContext"
 
 const ContactCard = ({ contact }) => {
-  // Determinar el color del estado basado en `contact.show`
+  // Determine the status color based on `contact.show`
   let statusColor
   switch (contact.show) {
     case "available":
-      statusColor = "#28c840"
+      statusColor = "#28c840" // Green for available
       break
     case "idle":
-      statusColor = "#febb30"
+      statusColor = "#febb30" // Yellow for idle
       break
     case "unavailable":
-      statusColor = "#80848e"
+      statusColor = "#80848e" // Gray for unavailable
       break
     default:
-      statusColor = "#80848e" // Por defecto, si no hay un estado conocido
+      statusColor = "#80848e" // Default gray if the status is unknown
       break
   }
 
@@ -32,15 +32,19 @@ const ContactCard = ({ contact }) => {
     <div className="flex flex-row items-center gap-2">
       <div className="relative">
         <div className="w-10 h-10 bg-gray-400 text-white rounded-full flex items-center justify-center text-lg font-bold">
-          {contact.jid?.charAt(0).toUpperCase()}
+          {contact.jid?.charAt(0).toUpperCase()}{" "}
+          {/* Display the first letter of the JID */}
         </div>
         <div
           className="w-3 h-3 rounded-full absolute bottom-0 right-0"
-          style={{ backgroundColor: statusColor }}></div>
+          style={{ backgroundColor: statusColor }}></div>{" "}
+        {/* Status indicator */}
       </div>
       <div className="flex flex-col justify-center">
-        <p className="text-md font-bold">{contact.jid}</p>
-        {contact.status && <p className="text-sm">{contact.status}</p>}
+        <p className="text-md font-bold">{contact.jid}</p>{" "}
+        {/* Display the JID */}
+        {contact.status && <p className="text-sm">{contact.status}</p>}{" "}
+        {/* Display the contact status if available */}
       </div>
       <hr />
     </div>
@@ -48,21 +52,22 @@ const ContactCard = ({ contact }) => {
 }
 
 const Contacts = () => {
-  const { xmppClientProvider } = useContext(XMPPContext)
-  const [contacts, setContacts] = useState([])
+  const { xmppClientProvider } = useContext(XMPPContext) // Access XMPP client provider from context
+  const [contacts, setContacts] = useState([]) // State to store the list of contacts
 
+  // Effect to fetch and update the contacts list when the component mounts
   useEffect(() => {
     const handleContactsUpdate = async () => {
       if (!xmppClientProvider) return
 
       try {
-        const updatedContacts = await xmppClientProvider.getRoster()
+        const updatedContacts = await xmppClientProvider.getRoster() // Fetch the contact list (roster)
         console.log("Updated contacts from roster:", updatedContacts)
-        setContacts(updatedContacts)
+        setContacts(updatedContacts) // Update the contacts state
 
-        // Escuchar cambios en el estado de los contactos
+        // Listen for changes in contact status
         xmppClientProvider.setContactsUpdateListener((updatedContacts) => {
-          setContacts([...updatedContacts]) // Asegúrate de crear un nuevo array para forzar el renderizado
+          setContacts([...updatedContacts]) // Ensure a new array is created to trigger a re-render
         })
       } catch (error) {
         console.error("Error fetching contacts:", error)
@@ -73,7 +78,7 @@ const Contacts = () => {
 
     return () => {
       console.log("Cleaning up contacts listener")
-      xmppClientProvider?.setContactsUpdateListener(() => {})
+      xmppClientProvider?.setContactsUpdateListener(() => {}) // Cleanup the listener on component unmount
     }
   }, [xmppClientProvider])
 
@@ -88,10 +93,13 @@ const Contacts = () => {
         </Button>
       </SheetTrigger>
       <SheetContent side="left">
+        {" "}
+        {/* Slide-in sheet from the left side */}
         <SheetHeader>
           <SheetTitle>Contacts</SheetTitle>
         </SheetHeader>
         <div className="mt-2 flex flex-col gap-1">
+          {/* Render each contact using the ContactCard component */}
           {contacts.length > 0 ? (
             contacts.map((contact, index) => (
               <ContactCard key={index} contact={contact} />

@@ -1,29 +1,31 @@
 "use client"
 
 import { createContext, useEffect, useState } from "react"
-import XMPPCLient from "@/lib/xmpp"
+import XMPPClient from "@/lib/xmpp"
 import { parseCookies, setCookie } from "nookies"
-import { useRouter } from "next/navigation" // Para la redirección
+import { useRouter } from "next/navigation"
 
-// Context
+// Context for XMPP
 export const XMPPContext = createContext()
 
-// Provider
+// Provider component to manage XMPP client and state
 export const XMPPProvider = ({ children }) => {
-  const [xmppClientProvider, setXmppClientProvider] = useState(null)
+  const [xmppClientProvider, setXmppClientProvider] = useState(null) // State to store the XMPP client instance
   const [credentials, setCredentials] = useState({
     service: "",
     username: "",
     password: "",
-  })
-  const [isMounted, setIsMounted] = useState(false)
-  const [isInitialized, setIsInitialized] = useState(false) // Nuevo estado para manejar la redirección
-  const router = useRouter()
+  }) // State to store the user's credentials
+  const [isMounted, setIsMounted] = useState(false) // State to track component mount status
+  const [isInitialized, setIsInitialized] = useState(false) // State to track XMPP client initialization status
+  const router = useRouter() // Router for navigation
 
+  // Effect to set the mounted state when the component mounts
   useEffect(() => {
     setIsMounted(true)
   }, [])
 
+  // Effect to load saved credentials from cookies
   useEffect(() => {
     if (isMounted) {
       const cookies = parseCookies()
@@ -36,11 +38,12 @@ export const XMPPProvider = ({ children }) => {
           service: savedService,
           username: savedUsername,
           password: savedPassword,
-        })
+        }) // Load saved credentials into state
       }
     }
   }, [isMounted])
 
+  // Effect to initialize the XMPP client when credentials are set
   useEffect(() => {
     const initializeClient = async () => {
       if (
@@ -49,19 +52,19 @@ export const XMPPProvider = ({ children }) => {
         credentials.password &&
         !xmppClientProvider
       ) {
-        const xmppClient = new XMPPCLient(
+        const xmppClient = new XMPPClient(
           credentials.service,
           credentials.username,
           credentials.password
         )
 
         try {
-          await xmppClient.initialize()
-          setXmppClientProvider(xmppClient)
-          setIsInitialized(true) // Marcar como inicializado para redirigir después
+          await xmppClient.initialize() // Initialize the XMPP client
+          setXmppClientProvider(xmppClient) // Store the initialized client in state
+          setIsInitialized(true) // Mark the client as initialized
           console.log("XMPP Client initialized")
 
-          // Guardar credenciales en las cookies
+          // Save credentials to cookies
           setCookie(null, "service", credentials.service, {
             maxAge: 30 * 24 * 60 * 60,
             path: "/",
@@ -84,7 +87,7 @@ export const XMPPProvider = ({ children }) => {
       initializeClient()
     }
 
-    // Cleanup function solo se ejecuta cuando el componente se desmonta
+    // Cleanup function to close the XMPP client when the component unmounts
     return () => {
       if (xmppClientProvider) {
         xmppClientProvider.close()
@@ -93,15 +96,15 @@ export const XMPPProvider = ({ children }) => {
     }
   }, [credentials, isMounted])
 
+  // Effect to redirect to the chat page when the XMPP client is initialized
   useEffect(() => {
-    // Redirigir a /chat si el cliente XMPP ha sido inicializado correctamente
     if (isInitialized && xmppClientProvider) {
       router.push("/chat")
     }
   }, [isInitialized, xmppClientProvider, router])
 
   if (!isMounted) {
-    // Evitar la renderización hasta que el componente esté completamente montado
+    // Prevent rendering until the component is fully mounted
     return null
   }
 
@@ -118,4 +121,5 @@ export const XMPPProvider = ({ children }) => {
   )
 }
 
+// Disable TLS certificate verification for Node.js
 process.env.node_tls_reject_unauthorized = "0"

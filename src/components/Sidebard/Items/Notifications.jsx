@@ -10,11 +10,14 @@ import { Button } from "@/components/ui/button"
 import { Bell } from "lucide-react"
 import { XMPPContext } from "@/context/xmppContext"
 
+// Component to render individual notification cards
 const NotificationCard = ({ notification, onAccept, onReject }) => {
+  // Determine the background color based on whether the notification is new
   const cardClassName = notification.isNew
     ? "bg-blue-100 p-2 rounded-md"
     : "bg-white p-2 rounded-md"
 
+  // Render different UI based on the notification type
   switch (notification.type) {
     case "subscribe":
       return (
@@ -49,7 +52,7 @@ const NotificationCard = ({ notification, onAccept, onReject }) => {
             <p className="font-bold">{notification.inviter}</p>
             <div className="flex flex-row items-center">
               <p className="text-[10px]">
-                te ha invitado al grupo "{notification.subject}"
+                invited you to join the group "{notification.subject}"
               </p>
               <div className="ml-auto flex gap-1">
                 <Button
@@ -78,14 +81,16 @@ const NotificationCard = ({ notification, onAccept, onReject }) => {
 }
 
 const Notifications = () => {
-  const { xmppClientProvider } = useContext(XMPPContext)
-  const [notifications, setNotifications] = useState([])
-  const [unreadCount, setUnreadCount] = useState(0)
+  const { xmppClientProvider } = useContext(XMPPContext) // Access XMPP client provider from context
+  const [notifications, setNotifications] = useState([]) // State to store notifications
+  const [unreadCount, setUnreadCount] = useState(0) // State to store the count of unread notifications
 
+  // Effect to handle receiving and updating notifications
   useEffect(() => {
     if (xmppClientProvider) {
       const handleNotificationChange = (newNotifications) => {
         setNotifications((prevNotifications) => {
+          // Filter out duplicate notifications
           const newUniqueNotifications = newNotifications.filter(
             (newNotif) =>
               !prevNotifications.some(
@@ -96,31 +101,33 @@ const Notifications = () => {
               )
           )
 
+          // Mark new notifications as "new"
           const updatedNotifications = newUniqueNotifications.map(
             (notification) => ({
               ...notification,
-              isNew: true, // Marcar la notificación como nueva
+              isNew: true, // Mark notification as new
             })
           )
 
-          return [...updatedNotifications.reverse(), ...prevNotifications]
+          return [...updatedNotifications.reverse(), ...prevNotifications] // Combine new and existing notifications
         })
 
         if (newNotifications.length > 0) {
-          setUnreadCount((prevCount) => prevCount + newNotifications.length)
+          setUnreadCount((prevCount) => prevCount + newNotifications.length) // Update unread count
         }
       }
 
-      xmppClientProvider.receiveContactRequest()
-      xmppClientProvider.onNotificationsChange(handleNotificationChange)
+      xmppClientProvider.receiveContactRequest() // Start receiving contact requests
+      xmppClientProvider.onNotificationsChange(handleNotificationChange) // Listen for notification changes
 
-      // Cleanup
+      // Cleanup the listener when the component unmounts
       return () => {
         xmppClientProvider.onNotificationsChange(() => {})
       }
     }
   }, [xmppClientProvider])
 
+  // Handle accepting a notification
   const handleAccept = (jid, inviterJid = null) => {
     if (xmppClientProvider) {
       const notification = notifications.find(
@@ -130,11 +137,12 @@ const Notifications = () => {
 
       if (notification) {
         if (notification.type === "subscribe") {
-          xmppClientProvider.acceptContactRequest(jid)
+          xmppClientProvider.acceptContactRequest(jid) // Accept contact request
         } else if (notification.type === "groupchat-invite") {
-          xmppClientProvider.acceptGroupChatInvite(jid, inviterJid)
+          xmppClientProvider.acceptGroupChatInvite(jid, inviterJid) // Accept group chat invite
         }
 
+        // Remove the accepted notification from the list
         setNotifications((prevNotifications) =>
           prevNotifications.filter((n) => n !== notification)
         )
@@ -142,6 +150,7 @@ const Notifications = () => {
     }
   }
 
+  // Handle rejecting a notification
   const handleReject = (jid, inviterJid = null) => {
     if (xmppClientProvider) {
       const notification = notifications.find(
@@ -151,11 +160,12 @@ const Notifications = () => {
 
       if (notification) {
         if (notification.type === "subscribe") {
-          xmppClientProvider.rejectContactRequest(jid)
+          xmppClientProvider.rejectContactRequest(jid) // Reject contact request
         } else if (notification.type === "groupchat-invite") {
-          xmppClientProvider.rejectGroupChatInvite(jid, inviterJid)
+          xmppClientProvider.rejectGroupChatInvite(jid, inviterJid) // Reject group chat invite
         }
 
+        // Remove the rejected notification from the list
         setNotifications((prevNotifications) =>
           prevNotifications.filter((n) => n !== notification)
         )
@@ -163,14 +173,16 @@ const Notifications = () => {
     }
   }
 
+  // Handle opening the notifications panel
   const handleOpenNotifications = () => {
+    // Mark all notifications as read
     setNotifications((prevNotifications) =>
       prevNotifications.map((notification) => ({
         ...notification,
         isNew: false,
       }))
     )
-    setUnreadCount(0)
+    setUnreadCount(0) // Reset unread count
   }
 
   return (
