@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# XMPP chat project
 
-## Getting Started
+is a real-time chat application built with Next.js and XMPP (Extensible Messaging and Presence Protocol). The application allows users to communicate through individual and group chats, manage their contacts, and set their presence status. It leverages modern React libraries and tools to provide a smooth and interactive user experience.
 
-First, run the development server:
+## Features
+* Real-time Messaging: Communicate with other users in real-time using the XMPP protocol.
+* Group Chats: Join and participate in group conversations.
+* Contact Management: Add, remove, and manage contacts easily.
+* Presence Management: Set and update your online status.
+* Notifications: Receive notifications for new messages, group chat invites, and contact requests.
+* Authentication: Simple authentication flow to ensure secure access.
 
+## Tech Stack 
+* Next.js: A React framework for building modern web applications.
+* React: A JavaScript library for building user interfaces.
+* XMPP: An open-standard communications protocol for message-oriented middleware based on XML.
+* Tailwind CSS: A utility-first CSS framework for styling.
+* Zod: TypeScript-first schema declaration and validation library.
+
+## Prerequisites 
+Before you begin, ensure you have met the following requirements:
+
+* Node.js: You need to have Node.js installed (version 14 or higher recommended).
+* npm or yarn: You should have npm or yarn installed to manage dependencies.
+
+## Installation 
+1. Clone the repository 
+
+2. Install dependencies 
+Using npm:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Using yarn:
+```bash
+yarn install
+```
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Running the application 
+To start the development server, run:
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+Or with yarn:
+```bash
+yarn dev
+```
 
-## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure 
+Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+* `/components`: Contains reusable React components.
+* `/context`: Context providers for managing global state, such as XMPP connections.
+* `/pages`: Contains the Next.js pages and API routes.
+* `/public`: Static assets like images and icons.
+* `/styles`: Global styles and Tailwind CSS configuration.
