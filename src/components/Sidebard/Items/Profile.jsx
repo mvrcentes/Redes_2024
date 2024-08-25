@@ -1,31 +1,33 @@
 "use client"
 
-import React, { useState, useContext, useEffect } from "react"
+import { useContext } from "react"
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { UserRound } from "lucide-react"
 import { XMPPContext } from "@/context/xmppContext"
 import Presence from "./ProfileItems/Presence"
 import { useRouter } from "next/navigation"
+import { useToast } from "@/components/ui/use-toast"
 
 const Profile = () => {
   const { xmppClientProvider } = useContext(XMPPContext)
   const router = useRouter()
+  const { toast } = useToast()
 
   const handleRemoveAccount = async () => {
     if (xmppClientProvider) {
       await xmppClientProvider.deleteAccount()
+      toast({
+        title: "Account deleted",
+        description: "Your account has been removed",
+      })
       router.push("/auth")
     }
   }
