@@ -445,16 +445,17 @@ class XMPPClient {
       const formData = new FormData()
       formData.append("file", file)
 
-      const response = await fetch("/api/", {
-        method: "POST",
-        body: formData,
+      const response = await axios.post("/api/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       })
 
-      if (!response.ok) {
+      if (response.status !== 200) {
         throw new Error("Failed to upload file")
       }
 
-      const data = await response.json()
+      const data = response.data
       if (data.url) {
         console.log("File uploaded successfully:", data.url)
         return data.url
@@ -462,7 +463,7 @@ class XMPPClient {
         throw new Error("No URL returned from upload")
       }
     } catch (error) {
-      console.error("Failed to upload file:", error)
+      console.error("Failed to upload file:", error.message)
       throw error
     }
   }
