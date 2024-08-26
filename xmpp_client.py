@@ -1,35 +1,30 @@
+# xmpp_client.py
 import sys
+import slixmpp
+import asyncio
+import json
+
 if sys.platform == 'win32':
-    import asyncio
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-import slixmpp
-
 class SendMsgBot(slixmpp.ClientXMPP):
-    def __init__(self, jid, password, recipient, message):
-        slixmpp.ClientXMPP.__init__(self, jid, password)
-        self.recipient = recipient
-        self.msg = message
+    def __init__(self, jid, password):
+        super().__init__(jid, password)
 
+        # Event handlers
         self.add_event_handler("session_start", self.start)
-        self.add_event_handler("message", self.message)
+        self.add_event_handler("message", self.message_received)
 
     async def start(self, event):
+        """Handle session start."""
         self.send_presence()
         await self.get_roster()
 
-        print(f"Sending message to {self.recipient}")
-
-        self.send_message(mto=self.recipient,
-                          mbody=self.msg,
-                          mtype='chat')
-
-    def message(self, msg):
+    def message_received(self, msg):
+        """Handle incoming messages."""
         if msg['type'] in ('chat', 'normal'):
-            print(f"Received message: {msg['body']}")
+            self.handle_message(msg)
 
-async def main():
-    jid = jabberid
-    xmpp = SendMsgBot(jid, password, receiver, message)
-    xmpp.connect((jid.split('@')[1], 7070), disable_starttls=True)
-    await xmpp.disconnected
+    def handle_message(self, msg):
+        """Este método debe ser sobrescrito por las subclases para manejar mensajes."""
+        print(f"Mensaje recibido de {msg['from']}: {msg['body']}")

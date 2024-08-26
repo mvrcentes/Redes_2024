@@ -1,13 +1,20 @@
-def flood(node, message):
-    """ Implementa el algoritmo de Flooding enviando el mensaje a todos los vecinos excepto al emisor. """
-    for neighbor in node.neighbors:
-        if neighbor != message['from'].bare:
-            node.send_message(mto=neighbor, mbody=message['body'], mtype='chat')
+# routing.py
+import json
 
-def link_state_routing(node, message):
-    """ Implementa el algoritmo Link State Routing. """
-    pass  # Aquí va la lógica para LSR
+def flood(node, msg_data, immediate_sender_jid):
+    """
+    Implementa el algoritmo de Flooding reenviando el mensaje a todos los vecinos
+    excepto al remitente inmediato.
+    """
+    # Incrementa el contador de saltos
+    msg_data['hops'] += 1
 
-def distance_vector(node, message):
-    """ Implementa el algoritmo Distance Vector Routing. """
-    pass  # Aquí va la lógica para DVR
+    # Reconstruye el mensaje JSON
+    message_body = json.dumps(msg_data)
+
+    # Reenvía a todos los vecinos excepto al remitente inmediato
+    for neighbor_jid in node.neighbors:
+        if neighbor_jid != immediate_sender_jid:
+            node.send_message(mto=neighbor_jid, mbody=message_body, mtype='chat')
+            print(f"{node.node_name} reenvía el mensaje a {neighbor_jid}")
+  
