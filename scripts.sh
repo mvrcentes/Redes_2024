@@ -19,3 +19,10 @@ python3 main.py \
     --password cen21032 \
     --name Node3 \
     --neighbors ram21032@alumchat.lol,1 ram21032-test@alumchat.lol,1
+
+
+ python main.py --jid ram21032@alumchat.lol/resource1 --password ram21032 --name A --topo topo1-x-random-test.json --names names1-x-random-test.json --payload "Hello, this is a test message"
+
+ python main.py --jid ram21032-test@alumchat.lol/resource1 --password ram21032 --name A --topo topo1-x-random-test.json --names names1-x-random-test.json --payload "Hello, this is a test message"
+
+python main.py --jid cen21032@alumchat.lol/resource1 --password cen21032 --name A --topo topo1-x-random-test.json --names names1-x-random-test.json --payload "Hello, this is a test message"

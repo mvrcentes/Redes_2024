@@ -15,6 +15,6 @@ def flood(node, msg_data, immediate_sender_jid):
     # Reenvía a todos los vecinos excepto al remitente inmediato
     for neighbor_jid in node.neighbors:
         if neighbor_jid != immediate_sender_jid:
+            print(f"{node.node_name} va a reenviar el mensaje a {neighbor_jid}")
             node.send_message(mto=neighbor_jid, mbody=message_body, mtype='chat')
-            print(f"{node.node_name} reenvía el mensaje a {neighbor_jid}")
-  
+            print(f"{node.node_name} reenvió el mensaje a {neighbor_jid}")
