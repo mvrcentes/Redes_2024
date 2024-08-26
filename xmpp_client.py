@@ -1,44 +1,35 @@
-# Maneja la conexión y comunicación XMPP
+import sys
+if sys.platform == 'win32':
+    import asyncio
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 import slixmpp
-from slixmpp.exceptions import IqError, IqTimeout
 
+class SendMsgBot(slixmpp.ClientXMPP):
+    def __init__(self, jid, password, recipient, message):
+        slixmpp.ClientXMPP.__init__(self, jid, password)
+        self.recipient = recipient
+        self.msg = message
 
-class XMPPClient(slixmpp.ClientXMPP):
-    def __init__(self, jid, password):
-        super().__init__(jid, password)
-        self.add_event_handler("session_start", self.session_start)
+        self.add_event_handler("session_start", self.start)
         self.add_event_handler("message", self.message)
-        # Agregar un handler para desconexiones
-        self.add_event_handler("disconnected", self.disconnected)
-        # Indicador de conexión exitosa
-        self.connected_event = slixmpp.xmlstream.handler.callback.Callback(
-            'Connected', slixmpp.xmlstream.matcher.MatchXPath("{jabber:client}iq[@type='result']"), self.handle_connected)
 
-    async def session_start(self, event):
-        print("Session started successfully.")
-        await self.get_roster()
+    async def start(self, event):
         self.send_presence()
+        await self.get_roster()
 
-    async def message(self, msg):
+        print(f"Sending message to {self.recipient}")
+
+        self.send_message(mto=self.recipient,
+                          mbody=self.msg,
+                          mtype='chat')
+
+    def message(self, msg):
         if msg['type'] in ('chat', 'normal'):
-            print(f"Message from {msg['from']}: {msg['body']}")
+            print(f"Received message: {msg['body']}")
 
-    def disconnected(self, event):
-        print("Disconnected from the server.")
-
-    def handle_connected(self, iq):
-        print("Successfully connected and authenticated.")
-
-    def start(self):
-        self.register_plugin('xep_0030')  # Service Discovery
-        self.register_plugin('xep_0199')  # XMPP Ping
-        self.register_plugin('xep_0045')  # Multi-User Chat
-        self.register_plugin('xep_0096')  # File transfer
-
-        if self.connect(disable_starttls=True):
-            self.process(forever=False)
-            return True
-        else:
-            print("Failed to connect.")
-            return False
+async def main():
+    jid = jabberid
+    xmpp = SendMsgBot(jid, password, receiver, message)
+    xmpp.connect((jid.split('@')[1], 7070), disable_starttls=True)
+    await xmpp.disconnected

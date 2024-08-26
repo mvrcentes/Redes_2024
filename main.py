@@ -1,18 +1,12 @@
-# Archivo principal para ejecutar el programa.
+import asyncio
+from xmpp_client import SendMsgBot
+from config import XMPP_JID, XMPP_PASSWORD, XMPP_HOST, XMPP_PORT, RECEIVER_JID, MESSAGE
 
-from xmpp_client import XMPPClient
+async def main():
+    xmpp = SendMsgBot(XMPP_JID, XMPP_PASSWORD, RECEIVER_JID, MESSAGE)
 
-
-def main():
-    jid = input("Enter your JID: ")
-    password = input("Enter your password: ")
-
-    xmpp = XMPPClient(jid, password)
-    if xmpp.start():
-        print("XMPP client started successfully.")
-    else:
-        print("Failed to start XMPP client.")
-
+    xmpp.connect((XMPP_HOST, XMPP_PORT), disable_starttls=True)
+    await xmpp.disconnected
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
