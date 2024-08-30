@@ -1,14 +1,11 @@
 {
-  "type": "names",
-  "config": {
-    "A": "jm1@alumchat.lol",
-    "B": "jm2@alumchat.lol",
-    "C": "jm3@alumchat.lol",
-    "D": "jm4@alumchat.lol",
-    "E": "jm5@alumchat.lol",
-    "F": "jm6@alumchat.lol",
-    "G": "jm7@alumchat.lol",
-    "H": "jm8@alumchat.lol",
-    "I": "jm9@alumchat.lol"
-  }
-}
+    "type":"names",
+    "config":{
+       "A":"grupo-3@alumchat.lol",
+       "B":"grupo-6@alumchat.lol",
+       "C":"grupo-1@alumchat.lol",
+       "D":"grupo-4@alumchat.lol",
+       "E":"grupo-5@alumchat.lol",
+       "F":"grupo-2@alumchat.lol"
+    }
+ }

@@ -1,0 +1,14 @@
+{
+  "type": "names",
+  "config": {
+    "A": "jm1@alumchat.lol",
+    "B": "jm2@alumchat.lol",
+    "C": "jm3@alumchat.lol",
+    "D": "jm4@alumchat.lol",
+    "E": "jm5@alumchat.lol",
+    "F": "jm6@alumchat.lol",
+    "G": "jm7@alumchat.lol",
+    "H": "jm8@alumchat.lol",
+    "I": "jm9@alumchat.lol"
+  }
+}
