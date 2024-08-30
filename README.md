@@ -16,6 +16,7 @@ El proyecto está organizado en los siguientes archivos principales:
 - **src/app.js**: Punto de entrada principal que inicializa los nodos y configura la red.
 - **src/xmppClient.js**: Módulo que maneja la creación y configuración de clientes XMPP para cada nodo.
 - **src/flooding.js**: Implementación del algoritmo de flooding, que maneja el envío y recepción de mensajes, así como el registro de rutas probadas.
+- **src/lsr.js**: Implementación del algoritmo de Link State Routing (LSR), el cual establece una tabla de enrutamiento para todos los nodos de la red mediante una etapa de comunicación inicial en la que cada nodo comparte un 'estado' con sus vecinos.
 - **config/names.txt**: Archivo JSON que contiene el mapeo de nombres de nodos a JIDs.
 - **config/topology.txt**: Archivo JSON que define la topología de la red, especificando las conexiones entre los nodos.
 
