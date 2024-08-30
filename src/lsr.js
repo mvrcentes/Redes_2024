@@ -1,5 +1,6 @@
 const { xml } = require('@xmpp/client');
 const uuid = require('uuid');
+const MinHeap = require("heap");
 
 class LinkStateRouting {
     constructor(node, xmppClient, neighbors, costs) {
