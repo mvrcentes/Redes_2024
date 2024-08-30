@@ -2,9 +2,23 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const uuid = require('uuid');
+const yargs = require('yargs/yargs');
+const { hideBin } = require('yargs/helpers');
 const initializeXmppClient = require('./xmppClient');
 const FloodingAlgorithm = require('./flooding');
 const LinkStateRouting = require('./lsr');
+
+// Configuración de yargs para manejar los argumentos
+const argv = yargs(hideBin(process.argv))
+    .option('algorithm', {
+        alias: 'a',
+        type: 'string',
+        description: 'Algorithm to use (lsr or flooding)',
+        default: 'lsr',
+        choices: ['lsr', 'flooding']
+    })
+    .help()
+    .argv;
 
 // Ruta de configuración
 const configDirectory = path.join(__dirname, '../config');
@@ -110,12 +124,11 @@ async function main() {
     });
 
     const xmppClient = initializeXmppClient(jid, password);
-
-    // Elegir el algoritmo (Flooding o LSR)
-    const algorithm = 'lsr'; // Puedes cambiar a 'flooding' si lo prefieres
+    
+    // Selección del algoritmo basado en el argumento en línea de comandos
     let algorithmInstance;
 
-    if (algorithm === 'lsr') {
+    if (argv.algorithm === 'lsr') {
         algorithmInstance = new LinkStateRouting({ nodeId, jid }, xmppClient, neighborJids, costs);
     } else {
         algorithmInstance = new FloodingAlgorithm({ nodeId, jid }, xmppClient, neighborJids);
