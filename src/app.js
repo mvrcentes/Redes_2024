@@ -1,11 +1,11 @@
 const fs = require('fs');
 const path = require('path');
-const createXmppClient = require('./xmppClient');
-const Flooding = require('./flooding');
+const initializeXmppClient = require('./xmppClient');
+const FloodingAlgorithm = require('./flooding');
 
-// Variables de configuración
+// Configuration variables
 const configDirectory = path.join(__dirname, '../config');
-const nodeConfigs = [
+const nodeConfigurations = [
     { nodeId: 'A', password: 'jm1' },
     { nodeId: 'B', password: 'jm2' },
     { nodeId: 'C', password: 'jm3' },
@@ -18,32 +18,32 @@ const nodeConfigs = [
 ];
 
 const namesPath = path.join(configDirectory, 'names.txt');
-const topoPath = path.join(configDirectory, 'topo.txt');
+const topologyPath = path.join(configDirectory, 'topo.txt');
 
-// Configuración para elegir el nodo remitente y destinatario
+// Configure sender and recipient nodes
 const senderNodeId = 'I';
-const recipientJID = 'jm1@alumchat.lol';
+const recipientJid = 'jm1@alumchat.lol';
 
 const namesData = JSON.parse(fs.readFileSync(namesPath, 'utf8'));
-const topoData = JSON.parse(fs.readFileSync(topoPath, 'utf8'));
+const topologyData = JSON.parse(fs.readFileSync(topologyPath, 'utf8'));
 
-// Inicializar nodos
+// Initialize nodes
 const nodes = {};
 
-nodeConfigs.forEach(({ nodeId, password }) => {
-    const nodeJID = namesData.config[nodeId];
-    const neighbors = topoData.config[nodeId].map(neighborId => namesData.config[neighborId]);
+nodeConfigurations.forEach(({ nodeId, password }) => {
+    const nodeJid = namesData.config[nodeId];
+    const neighbors = topologyData.config[nodeId].map(neighborId => namesData.config[neighborId]);
 
-    const xmppClient = createXmppClient(nodeJID, password);
-    const flooding = new Flooding({ nodeId, jid: nodeJID }, xmppClient, neighbors);
-    nodes[nodeId] = flooding;
+    const xmppClient = initializeXmppClient(nodeJid, password);
+    const floodingAlgorithm = new FloodingAlgorithm({ nodeId, jid: nodeJid }, xmppClient, neighbors);
+    nodes[nodeId] = floodingAlgorithm;
 
     xmppClient.on('online', () => {
-        console.log(`[DEBUG] Nodo ${nodeId} está online con JID: ${nodeJID}`);
-        console.log(`[INFO] Vecinos de Nodo ${nodeId}: ${neighbors.join(', ')}\n`);
+        console.log(`[ONLINE] Node ${nodeId} is online with JID: ${nodeJid}`);
+        console.log(`[NEIGHBORS] Node ${nodeId} neighbors: ${neighbors.join(', ')}\n`);
         if (nodeId === senderNodeId) {
-            console.log(`[DEBUG] Nodo ${nodeId} enviando mensaje inicial a ${recipientJID}...`);
-            flooding.sendChatMessage(recipientJID, `Hello from Node ${senderNodeId} to ${recipientJID.split('@')[0]}!`);
+            console.log(`[INITIAL MESSAGE] Node ${nodeId} is sending initial message to ${recipientJid}...`);
+            floodingAlgorithm.sendInitialChatMessage(recipientJid, `Hello from Node ${senderNodeId} to ${recipientJid.split('@')[0]}!`);
         }
     });
 });

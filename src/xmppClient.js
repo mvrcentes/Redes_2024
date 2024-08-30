@@ -1,6 +1,6 @@
 const { client, xml } = require('@xmpp/client');
 
-function createXmppClient(jid, password) {
+function initializeXmppClient(jid, password) {
     const xmppClient = client({
         service: `ws://${jid.split('@')[1]}:7070/ws/`,
         domain: jid.split('@')[1],
@@ -9,24 +9,24 @@ function createXmppClient(jid, password) {
     });
 
     xmppClient.on('online', (address) => {
-        console.log(`[DEBUG] Conectado como ${address.toString()}`);
+        console.log(`[ONLINE] Connected as: ${address.toString()}`);
     });
 
     xmppClient.on('stanza', (stanza) => {
         if (stanza.is('message') && stanza.attrs.type === 'chat') {
             const body = stanza.getChild('body');
             if (body) {
-                const message = JSON.parse(body.text());
-                console.log(`[DEBUG] Mensaje recibido de ${stanza.attrs.from}:`, message);
+                const messageContent = JSON.parse(body.text());
+                console.log(`[MESSAGE RECEIVED] From: ${stanza.attrs.from}`, messageContent);
             }
         }
     });
 
-    xmppClient.on('error', (err) => console.error('[ERROR] XMPP error:', err));
+    xmppClient.on('error', (error) => console.error('[ERROR] XMPP Error:', error));
 
     xmppClient.start().catch(console.error);
 
     return xmppClient;
 }
 
-module.exports = createXmppClient;
+module.exports = initializeXmppClient;

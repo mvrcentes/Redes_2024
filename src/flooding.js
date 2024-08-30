@@ -1,42 +1,42 @@
 const { xml } = require('@xmpp/client');
 
-class Flooding {
+class FloodingAlgorithm {
     constructor(node, xmppClient, neighbors) {
         this.node = node;
         this.xmppClient = xmppClient;
         this.neighbors = neighbors;
-        this.messagesSeen = new Set();
-        this.routesTried = [];
+        this.seenMessages = new Set();
+        this.attemptedRoutes = [];
 
         this.xmppClient.on('online', async () => {
-            console.log(`[DEBUG] Nodo ${this.node.nodeId} enviando presencia.`);
+            console.log(`[ONLINE] Node ${this.node.nodeId} is sending presence.`);
             await this.xmppClient.send(xml('presence'));
         });
 
-        this.xmppClient.on('stanza', this.handleStanza.bind(this));
+        this.xmppClient.on('stanza', this.processIncomingStanza.bind(this));
     }
 
-    handleStanza(stanza) {
+    processIncomingStanza(stanza) {
         if (stanza.is('message') && stanza.attrs.type === 'chat') {
             const body = stanza.getChild('body');
             if (body) {
-                const message = JSON.parse(body.text());
-                console.log(`[DEBUG] Nodo ${this.node.nodeId} recibió mensaje de ${stanza.attrs.from}:`, message);
-                this.handleMessage(message, stanza.attrs.from);
+                const receivedMessage = JSON.parse(body.text());
+                console.log(`[MESSAGE RECEIVED] Node ${this.node.nodeId} received from ${stanza.attrs.from}:`, receivedMessage);
+                this.processMessage(receivedMessage, stanza.attrs.from);
             }
         }
     }
 
-    handleMessage(message, from) {
+    processMessage(message, sender) {
         const messageId = `${message.type}-${message.from}-${message.to}-${message.payload}`;
-        if (this.messagesSeen.has(messageId)) {
-            console.log(`[DEBUG] Nodo ${this.node.nodeId} ya ha visto este mensaje: ${messageId}`);
+        if (this.seenMessages.has(messageId)) {
+            console.log(`[INFO] Node ${this.node.nodeId} has already seen this message: ${messageId}`);
             return;
         }
-        this.messagesSeen.add(messageId);
+        this.seenMessages.add(messageId);
 
-        // Guardar la ruta probada
-        this.routesTried.push({
+        // Save the attempted route
+        this.attemptedRoutes.push({
             from: this.node.jid,
             to: message.to,
             hops: message.hops || 0,
@@ -44,59 +44,59 @@ class Flooding {
         });
 
         if (message.to === this.node.jid) {
-            console.log(`[DEBUG] Mensaje entregado a ${this.node.nodeId}: ${message.payload}`);
-            this.printBestRoute();
+            console.log(`[DELIVERED] Message delivered to ${this.node.nodeId}: ${message.payload}`);
+            this.logShortestRoute();
         } else {
-            console.log(`[DEBUG] Nodo ${this.node.nodeId} reenviando mensaje a sus vecinos, excepto ${from}`);
-            this.floodMessage(message, from);
+            console.log(`[FORWARDING] Node ${this.node.nodeId} is forwarding message to neighbors, except ${sender}`);
+            this.forwardMessage(message, sender);
         }
     }
 
-    floodMessage(message, from) {
-        const forwardedMessage = {
+    forwardMessage(message, sender) {
+        const newMessage = {
             ...message,
             hops: (message.hops || 0) + 1,
         };
 
         this.neighbors.forEach((neighborJid) => {
-            if (neighborJid !== from) {
-                console.log(`[DEBUG] Nodo ${this.node.nodeId} reenviando mensaje a ${neighborJid}`);
-                this.sendMessage(forwardedMessage, neighborJid);
+            if (neighborJid !== sender) {
+                console.log(`[FORWARDING] Node ${this.node.nodeId} is sending message to ${neighborJid}`);
+                this.sendXmppMessage(newMessage, neighborJid);
             }
         });
     }
 
-    async sendMessage(message, recipient) {
+    async sendXmppMessage(message, recipient) {
         const stanza = xml(
             'message',
             { to: recipient, from: this.node.jid, type: 'chat' },
             xml('body', {}, JSON.stringify(message))
         );
-        console.log(`[DEBUG] Nodo ${this.node.nodeId} enviando mensaje a ${recipient}`);
+        console.log(`[SENDING] Node ${this.node.nodeId} is sending message to ${recipient}`);
         await this.xmppClient.send(stanza);
     }
 
-    sendChatMessage(to, payload) {
+    sendInitialChatMessage(recipient, content) {
         const message = {
             type: 'message',
             from: this.node.jid,
-            to: to,
+            to: recipient,
             hops: 0,
-            payload: payload,
+            payload: content,
         };
 
-        console.log(`[DEBUG] Nodo ${this.node.nodeId} creando y enviando mensaje a ${to}`);
-        this.handleMessage(message, this.node.jid);
+        console.log(`[INITIAL MESSAGE] Node ${this.node.nodeId} is creating and sending initial message to ${recipient}`);
+        this.processMessage(message, this.node.jid);
     }
 
-    printBestRoute() {
-        if (this.routesTried.length > 0) {
-            const bestRoute = this.routesTried.reduce((best, current) => 
+    logShortestRoute() {
+        if (this.attemptedRoutes.length > 0) {
+            const shortestRoute = this.attemptedRoutes.reduce((best, current) =>
                 best.hops <= current.hops ? best : current
             );
-            console.log(`[INFO] Ruta más corta encontrada: ${bestRoute.from} -> ${bestRoute.to} [hops: ${bestRoute.hops}]`);
+            console.log(`[INFO] Shortest route found: ${shortestRoute.from} -> ${shortestRoute.to} [hops: ${shortestRoute.hops}]`);
         }
     }
 }
 
-module.exports = Flooding;
+module.exports = FloodingAlgorithm;
