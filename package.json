@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./src/app.js",
+    "start-flooding": "node ./src/app.js --algorithm flooding",
+    "start-lsr": "node ./src/app.js --algorithm lsr"
   },
   "keywords": [],
   "author": "",
@@ -12,6 +15,7 @@
   "dependencies": {
     "@xmpp/client": "^0.13.1",
     "heap": "^0.2.7",
-    "uuid": "^10.0.0"
+    "uuid": "^10.0.0",
+    "yargs": "^17.7.2"
   }
 }
