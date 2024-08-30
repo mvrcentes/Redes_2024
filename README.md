@@ -7,7 +7,7 @@
 
 ## Descripción del Proyecto
 
-Este laboratorio implementa un algoritmo de flooding sobre una red de nodos utilizando el protocolo XMPP para la transmisión de mensajes. Cada nodo en la red actúa como un cliente XMPP que se comunica con sus vecinos configurados, propagando mensajes a través de la red y registrando la ruta más corta que un mensaje toma desde su origen hasta su destino.
+Este laboratorio implementa un algoritmo de flooding y un algoritmo de Link State Routing sobre una red de nodos utilizando el protocolo XMPP para la transmisión de mensajes. Cada nodo en la red actúa como un cliente XMPP que se comunica con sus vecinos configurados, propagando mensajes a través de la red y registrando la ruta más corta que un mensaje toma desde su origen hasta su destino.
 
 ## Estructura del Proyecto
 
@@ -22,23 +22,46 @@ El proyecto está organizado en los siguientes archivos principales:
 ## Instrucciones de Uso
 
 ### 1. Instalación de Dependencias
-Antes de ejecutar el proyecto, asegúrate de tener instaladas las dependencias necesarias:
+Antes de ejecutar el proyecto, asegúrate de tener instaladas las dependencias necesarias con el comando:
 
 ```bash
-npm install @xmpp/client
+npm install
 ```
 
 ### 2. Configuración
 Asegúrate de que los archivos de configuración `names.txt` y `topology.txt` estén correctamente ubicados en la carpeta `config/`. Estos archivos deben contener las configuraciones necesarias para los nodos y la topología de la red.
 
 ### 3. Ejecución
-Para ejecutar el laboratorio, utiliza el siguiente comando:
+Para ejecutar el laboratorio, puede utilizar los siguientes scripts:
 
+Ejecutar el laboratorio con los valores por defecto:
+```bash
+npm run start
+```
+Ejecutar el laboratorio con el algoritmo de flooding:
+```bash
+npm run start-flooding
+```
+Ejecutar el laboratorio con el algoritmo LSR:
+```bash
+npm run start-lsr
+```
+Alternativamente, puede ejecutar el programa principal de la siguiente manera:
 ```bash
 node src/app.js
 ```
 
-Este comando iniciará todos los nodos en la red, conectándolos mediante el protocolo XMPP y permitiendo la transmisión de mensajes a través de ellos utilizando el algoritmo de flooding.
+El programa cuenta con el argumento `--algorithm` con el cual puede establecer el algoritmo a utilizar entre `lsr` y `flooding`. En caso de no recibir ningun argumento, se utilizará `lsr` por defecto.
+
+Uso:
+```bash
+node src/app.js --algorithm lsr
+```
+```bash
+node src/app.js --algorithm flooding
+```
+
+El programa solicitará un JID (user@alumchat.lol) y una contraseña para conectarse al servidor, después de conectarse so mostrará un menú con las opciones disponibles. A través de este menú podrá consultar la topología de la red, ver la tabla de enrutamiento (si aplica), enviar mensajes a otros usuarios mediante su JID y salir del programa.
 
 ### 4. Logs
 Durante la ejecución, se generarán logs que proporcionan información detallada sobre las operaciones de cada nodo, incluyendo:
