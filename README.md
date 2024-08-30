@@ -1,7 +1,7 @@
 # Laboratorio 3 - Redes 2024
 
 ### Integrantes:
-- **Alejandro Ortega**
+- **Alejandro Ortega** - Carnet: 18248
 - **Marco Ramírez** - Carnet: 21032
 - **Josué Morales** - Carnet: 21116
 
